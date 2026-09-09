@@ -12,7 +12,7 @@ const server = http.createServer((req, res) => {
     res.writeHead(404).end();
     return;
   }
-  const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg' };
+  const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg' };
   res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
   fs.createReadStream(file).pipe(res);
 });
@@ -64,6 +64,21 @@ async function run(browser, url, viewport, failure) {
   assert.equal(await page.locator('.message').isVisible(), false);
 
   for (let round = 1; round <= 3; round++) {
+    await page.locator('#countdown').waitFor({ state: 'visible' });
+    assert.equal(await page.locator('#countdownValue').textContent(), '3');
+    const initialTop = await page.locator('.bird').evaluate(el => el.getBoundingClientRect().top);
+    await page.keyboard.press('Enter');
+    await page.touchscreen.tap(20, 200);
+    await page.waitForFunction(() => document.querySelector('#countdownValue').textContent === '2');
+    assert.equal(await page.locator('.bird').evaluate(el => el.getBoundingClientRect().top), initialTop);
+    assert.equal(await page.locator('.pipe_sprite').count(), 0);
+    assert.equal(await page.locator('.score_val').textContent(), '0');
+    if (round === 1 && process.env.SCREENSHOT_DIR) {
+      fs.mkdirSync(process.env.SCREENSHOT_DIR, { recursive: true });
+      await page.screenshot({ path: path.join(process.env.SCREENSHOT_DIR, `countdown-${viewport.width}.png`) });
+    }
+    await page.waitForFunction(() => document.querySelector('#countdownValue').textContent === '1');
+    await page.locator('#countdown').waitFor({ state: 'hidden' });
     // Controlled scores isolate persistence from the player's timing/skill.
     await page.locator('.score_val').evaluate((el, score) => el.textContent = score, [3, 8, 5][round - 1]);
     if (round === 3 && failure === 'write') await page.evaluate(() => window.failWrite = true);
@@ -118,7 +133,7 @@ async function run(browser, url, viewport, failure) {
   await page.waitForFunction(() => document.querySelector('#rankingStatus').textContent.includes('Aucun score'));
   assert.equal(await page.locator('.ranking li').count(), 0);
   assert.deepEqual(errors, []);
-  console.log(`PASS ${viewport.width}x${viewport.height}: three games, best score, top 10, empty ranking, ${failure || 'success'}`);
+  console.log(`PASS ${viewport.width}x${viewport.height}: countdown each round, three games, best score, top 10, empty ranking, ${failure || 'success'}`);
   await context.close();
 }
 

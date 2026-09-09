@@ -1,4 +1,5 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { startFixedStepLoop } from './game-loop.mjs';
 
 import {
   getDatabase,
@@ -281,7 +282,7 @@ async function handleLoginAndStartGame() {
     move_speed = 5;
     gravity = 0.65;
 
-    game_state = 'Play';
+    game_state = 'Countdown';
 
     message.hidden = true;
     replayButton.style.display = 'none';
@@ -298,7 +299,7 @@ async function handleLoginAndStartGame() {
       .style.backgroundImage =
         "url('/img/background.jpg')";
 
-    play();
+    startCountdown();
   }
 }
 
@@ -310,7 +311,7 @@ const loginButton =
   document.getElementById('loginBtn');
 
 async function requestStart() {
-  if (actionPending || game_state === 'Play') return;
+  if (actionPending || game_state === 'Play' || game_state === 'Countdown') return;
   actionPending = true;
   loginButton.disabled = true;
   replayButton.disabled = true;
@@ -354,28 +355,49 @@ document.addEventListener(
 // JEU
 // -------------------------
 
+function startCountdown() {
+  const countdown = document.getElementById('countdown');
+  const countdownValue = document.getElementById('countdownValue');
+  countdownValue.textContent = '3';
+  countdown.hidden = false;
+  let ticks = 0;
+  const controls = new AbortController();
+  const loop = startFixedStepLoop(() => {
+    ticks++;
+    if (ticks >= 180) {
+      controls.abort();
+      countdown.hidden = true;
+      bird_props = bird.getBoundingClientRect();
+      background = document.querySelector('.background').getBoundingClientRect();
+      game_state = 'Play';
+      play();
+      return false;
+    }
+    const remaining = String(3 - Math.floor(ticks / 60));
+    if (countdownValue.textContent !== remaining) countdownValue.textContent = remaining;
+  });
+  document.addEventListener('visibilitychange', loop.resetClock, { signal: controls.signal });
+}
+
 function play() {
 
   let bird_dy = 0;
   let pipe_seperation = 0;
   const pipe_gap = 31;
   const controls = new AbortController();
-  const frames = new Set();
-  function schedule(callback) {
-    if (game_state !== 'Play') return;
-    const id = requestAnimationFrame(() => {
-      frames.delete(id);
-      callback();
-    });
-    frames.add(id);
-  }
+  const loop = startFixedStepLoop(() => {
+    move();
+    applyGravity();
+    createPipe();
+    return game_state === 'Play';
+  });
+  document.addEventListener('visibilitychange', loop.resetClock, { signal: controls.signal });
 
   function finishGame() {
     if (game_state !== 'Play') return;
     game_state = 'End';
     controls.abort();
-    frames.forEach(cancelAnimationFrame);
-    frames.clear();
+    loop.stop();
     message2.innerHTML = `GAME OVER<br>Score : ${score_val.textContent}`;
     replayButton.textContent = gamesPlayed < MAX_GAMES
       ? 'REJOUER' : 'VOIR LE CLASSEMENT';
@@ -575,7 +597,6 @@ function play() {
       }
     );
 
-    schedule(move);
   }
 
   // -------------------------
@@ -609,7 +630,6 @@ function play() {
       return;
     }
 
-    schedule(applyGravity);
   }
 
   // -------------------------
@@ -681,10 +701,6 @@ function play() {
 
     pipe_seperation++;
 
-    schedule(createPipe);
   }
 
-  schedule(move);
-  schedule(applyGravity);
-  schedule(createPipe);
 }

@@ -4,6 +4,17 @@
 Il teste les trois parties, les clics répétés, le meilleur score, les dix premiers
 résultats, le classement vide et la reprise après une erreur de lecture ou
 d’écriture. Les résolutions testées sont 390 × 844, 844 × 390 et 1280 × 800.
+Il vérifie aussi le compte à rebours 3–2–1 avant chaque partie, l’immobilité du
+personnage et l’absence de lancement supplémentaire lors des appuis pendant l’attente.
+
+Les tests de cadence ne nécessitent aucune dépendance :
+
+```sh
+node --test tests/game-loop.test.mjs
+```
+
+Ils comparent dix secondes de simulation à 30, 60, 90, 120 et 144 Hz,
+la durée du compte à rebours, la pause en arrière-plan et l’arrêt des animations.
 
 Les opérations Firebase sont simulées pour ces scénarios. Aucun participant
 de test n’est ajouté à la base réelle. Les scores de partie sont contrôlés

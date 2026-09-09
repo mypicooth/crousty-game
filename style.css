@@ -287,6 +287,44 @@ body {
    GAME OVER
 ========================= */
 
+.countdown {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.35);
+  color: white;
+  text-align: center;
+  pointer-events: none;
+}
+
+.countdown-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(92vw, 420px);
+  padding: 12px;
+  border-radius: 22px;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.countdown-panel p {
+  margin: 10px 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.countdown-panel small {
+  font-size: 13px;
+}
+
+#countdownValue {
+  display: block;
+  color: #ffdc65;
+  font-size: clamp(64px, 15vh, 100px);
+  line-height: 1;
+}
+
 .message2 {
   position: fixed;
 
