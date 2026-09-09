@@ -1,129 +1,132 @@
 <!DOCTYPE html>
 <html lang="fr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+<head>
+  <meta charset="UTF-8">
 
-    <title>Crousty Game</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+  >
 
-    <link rel="stylesheet" href="style.css" />
+  <title>Crousty Game</title>
 
-    <script defer type="module" src="main.js"></script>
-  </head>
+  <link rel="stylesheet" href="style.css">
 
-  <body>
+  <script defer type="module" src="main.js"></script>
+</head>
 
-    <!-- Fond du jeu -->
-    <div class="background"></div>
+<body>
 
-    <!-- Personnage -->
-    <img
-      class="bird"
-      src="/img/logo.png"
-      alt="Crousty Game"
-    />
+  <!-- FOND -->
+  <div class="background"></div>
 
-    <!-- Écran d'accueil -->
-    <div class="message" id="welcomeScreen">
+  <!-- PERSONNAGE -->
+  <img
+    class="bird"
+    src="/img/logo.png"
+    alt="Crousty Game"
+  >
 
-      <div class="game-logo">
-        CROUSTY GAME
-      </div>
+  <!-- ACCUEIL -->
+  <div class="message" id="welcomeScreen">
 
-      <div class="game-subtitle">
-        Fais le meilleur score !
-      </div>
+    <div class="game-logo">
+      CROUSTY GAME
+    </div>
 
-      <div class="user-info">
+    <div class="game-subtitle">
+      Fais le meilleur score !
+    </div>
 
+    <div class="user-info">
+
+      <input
+        type="text"
+        id="firstName"
+        placeholder="Prénom *"
+        autocomplete="given-name"
+        required
+      >
+
+      <input
+        type="text"
+        id="lastName"
+        placeholder="Nom *"
+        autocomplete="family-name"
+        required
+      >
+
+      <input
+        type="email"
+        id="email"
+        placeholder="E-mail *"
+        autocomplete="email"
+        required
+      >
+
+      <input
+        type="tel"
+        id="phone"
+        placeholder="Téléphone *"
+        autocomplete="tel"
+        required
+      >
+
+      <label class="consent-line">
         <input
-          type="text"
-          id="firstName"
-          placeholder="Prénom *"
-          required
-          autocomplete="given-name"
-          inputmode="text"
-        />
+          type="checkbox"
+          id="consentGame"
+        >
 
+        <span>
+          J'accepte le règlement du jeu et la politique de confidentialité.
+        </span>
+      </label>
+
+      <label class="consent-line">
         <input
-          type="text"
-          id="lastName"
-          placeholder="Nom *"
-          required
-          autocomplete="family-name"
-          inputmode="text"
-        />
+          type="checkbox"
+          id="consentMarketing"
+        >
 
-        <input
-          type="email"
-          id="email"
-          placeholder="E-mail *"
-          required
-          autocomplete="email"
-          inputmode="email"
-        />
-
-        <input
-          type="tel"
-          id="phone"
-          placeholder="Téléphone *"
-          required
-          autocomplete="tel"
-          inputmode="tel"
-        />
-
-        <label class="consent-line">
-          <input
-            type="checkbox"
-            id="consentGame"
-            required
-          />
-
-          <span>
-            J'accepte le règlement du jeu et la politique de confidentialité.
-          </span>
-        </label>
-
-        <label class="consent-line">
-          <input
-            type="checkbox"
-            id="consentMarketing"
-          />
-
-          <span>
-            J'accepte de recevoir les offres et actualités de Crousty.
-          </span>
-        </label>
-
-      </div>
-
-      <button id="loginBtn">
-        JOUER
-      </button>
-
-      <div class="game-info">
-        3 parties pour réaliser ton meilleur score
-      </div>
+        <span>
+          J'accepte de recevoir les offres et actualités de Crousty.
+        </span>
+      </label>
 
     </div>
 
-    <!-- Message Game Over -->
-    <div class="message2"></div>
+    <button id="loginBtn">
+      JOUER
+    </button>
 
-    <!-- Score -->
-    <div class="score">
-
-      <span class="score_title"></span>
-
-      <span class="score_val"></span>
-
-      <!-- Leaderboard -->
-      <ul class="ranking"></ul>
-
+    <div class="game-info">
+      3 parties pour réaliser ton meilleur score
     </div>
 
-  </body>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="message2"></div>
+
+  <!-- BOUTON REJOUER -->
+  <button
+    id="replayBtn"
+    class="replay-btn"
+  >
+    REJOUER
+  </button>
+
+  <!-- SCORE / CLASSEMENT -->
+  <div class="score">
+
+    <span class="score_title"></span>
+
+    <span class="score_val"></span>
+
+    <ul class="ranking"></ul>
+
+  </div>
+
+</body>
 </html>
