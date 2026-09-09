@@ -1,22 +1,29 @@
 * {
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html,
 body {
   margin: 0;
   padding: 0;
+
   width: 100%;
   height: 100%;
+
   overflow: hidden;
+
   font-family: Arial, Helvetica, sans-serif;
+
   touch-action: manipulation;
+
+  background: #111;
 }
 
 body {
   position: relative;
-  background: #111;
 }
+
 
 /* =========================
    FOND
@@ -24,7 +31,9 @@ body {
 
 .background {
   position: fixed;
+
   inset: 0;
+
   width: 100vw;
   height: 100dvh;
 
@@ -36,6 +45,7 @@ body {
   z-index: 0;
 }
 
+
 /* =========================
    PERSONNAGE
 ========================= */
@@ -43,20 +53,22 @@ body {
 .bird {
   position: fixed;
 
-  width: clamp(48px, 12vw, 85px);
+  width: clamp(48px, 12vw, 80px);
   height: auto;
 
   top: 40vh;
   left: 18vw;
 
+  object-fit: contain;
+
   z-index: 5;
 
-  object-fit: contain;
   pointer-events: none;
 }
 
+
 /* =========================
-   ECRAN D'ACCUEIL
+   ACCUEIL
 ========================= */
 
 .message {
@@ -68,43 +80,43 @@ body {
   transform: translate(-50%, -50%);
 
   width: min(92vw, 440px);
-  max-height: 92dvh;
+  max-height: 94dvh;
 
   padding: 22px 18px;
 
   background: rgba(255, 255, 255, 0.96);
 
+  border: none;
   border-radius: 22px;
 
   text-align: center;
 
-  z-index: 20;
-
   overflow-y: auto;
 
+  z-index: 30;
+
   box-shadow:
-    0 12px 40px rgba(0, 0, 0, 0.28);
+    0 12px 40px rgba(0, 0, 0, 0.30);
 }
 
 .game-logo {
-  font-size: clamp(28px, 9vw, 48px);
+  font-size: clamp(30px, 9vw, 48px);
 
   font-weight: 900;
 
   line-height: 1;
 
   margin-bottom: 10px;
-
-  letter-spacing: -1px;
 }
 
 .game-subtitle {
   font-size: clamp(15px, 4vw, 18px);
 
-  margin-bottom: 18px;
-
   font-weight: 600;
+
+  margin-bottom: 18px;
 }
+
 
 /* =========================
    FORMULAIRE
@@ -123,19 +135,23 @@ body {
 .user-info input[type="text"],
 .user-info input[type="email"],
 .user-info input[type="tel"] {
+  display: block;
+
   width: 100%;
 
   min-height: 48px;
+
+  padding: 12px 14px;
 
   border: 1px solid #ccc;
 
   border-radius: 12px;
 
-  padding: 12px 14px;
+  background: #fff;
+
+  color: #111;
 
   font-size: 16px;
-
-  background: white;
 
   outline: none;
 }
@@ -143,6 +159,7 @@ body {
 .user-info input:focus {
   border-color: #111;
 }
+
 
 /* =========================
    CONSENTEMENTS
@@ -157,21 +174,26 @@ body {
 
   width: 100%;
 
+  margin-top: 3px;
+
   text-align: left;
 
   font-size: 12px;
 
   line-height: 1.35;
 
-  margin-top: 3px;
+  color: #222;
 }
 
-.consent-line input {
-  margin-top: 2px;
+.consent-line input[type="checkbox"] {
+  flex: 0 0 auto;
 
-  min-width: 18px;
-  min-height: 18px;
+  width: 18px;
+  height: 18px;
+
+  margin: 1px 0 0 0;
 }
+
 
 /* =========================
    BOUTON JOUER
@@ -180,23 +202,25 @@ body {
 #loginBtn {
   width: 100%;
 
-  min-height: 52px;
+  min-height: 54px;
 
   margin-top: 16px;
+
+  padding: 12px 20px;
 
   border: none;
 
   border-radius: 14px;
 
-  font-size: 18px;
-
-  font-weight: 800;
-
-  cursor: pointer;
-
   background: #111;
 
   color: white;
+
+  font-size: 19px;
+
+  font-weight: 900;
+
+  cursor: pointer;
 }
 
 #loginBtn:active {
@@ -208,8 +232,9 @@ body {
 
   font-size: 12px;
 
-  opacity: 0.7;
+  color: #666;
 }
+
 
 /* =========================
    SCORE
@@ -218,12 +243,12 @@ body {
 .score {
   position: fixed;
 
-  top: 14px;
+  top: 18px;
   left: 50%;
 
   transform: translateX(-50%);
 
-  width: min(94vw, 500px);
+  width: 94vw;
 
   text-align: center;
 
@@ -234,26 +259,29 @@ body {
   pointer-events: none;
 
   text-shadow:
-    0 2px 7px rgba(0, 0, 0, 0.8);
+    0 3px 7px rgba(0, 0, 0, 0.65);
 }
 
 .score_title {
   display: block;
 
-  font-size: clamp(16px, 5vw, 24px);
+  font-size: clamp(18px, 5vw, 28px);
 
-  font-weight: 800;
+  font-weight: 900;
 }
 
 .score_val {
   display: block;
 
-  font-size: clamp(38px, 12vw, 72px);
+  margin-top: 3px;
+
+  font-size: clamp(44px, 13vw, 78px);
 
   font-weight: 900;
 
   line-height: 1;
 }
+
 
 /* =========================
    GAME OVER
@@ -262,46 +290,124 @@ body {
 .message2 {
   position: fixed;
 
-  top: 50%;
+  top: 45%;
   left: 50%;
 
   transform: translate(-50%, -50%);
 
-  width: min(90vw, 420px);
+  width: 90vw;
+
+  margin: 0;
+  padding: 0;
 
   text-align: center;
 
   color: white;
 
+  font-size: clamp(28px, 8vw, 44px);
+
   font-weight: 900;
 
-  font-size: clamp(22px, 7vw, 38px);
+  line-height: 1.2;
 
-  line-height: 1.25;
-
-  z-index: 25;
+  z-index: 40;
 
   text-shadow:
-    0 3px 10px rgba(0, 0, 0, 0.8);
+    0 3px 10px rgba(0, 0, 0, 0.75);
+
+  pointer-events: none;
+
+  background: transparent !important;
+
+  border: none !important;
+
+  border-radius: 0 !important;
+
+  box-shadow: none !important;
 }
 
+.message2::before,
+.message2::after {
+  display: none !important;
+  content: none !important;
+}
+
+
 /* =========================
-   CLASSEMENT
+   BOUTON REJOUER
+========================= */
+
+.replay-btn {
+  display: none;
+
+  position: fixed;
+
+  top: 58%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(82vw, 340px);
+
+  min-height: 60px;
+
+  padding: 14px 20px;
+
+  border: none;
+
+  border-radius: 16px;
+
+  background: #111;
+
+  color: white;
+
+  font-size: 20px;
+
+  font-weight: 900;
+
+  z-index: 100;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 20px rgba(0, 0, 0, 0.30);
+}
+
+.replay-btn:active {
+  transform:
+    translate(-50%, -50%)
+    scale(0.96);
+}
+
+
+/* =========================
+   LEADERBOARD
 ========================= */
 
 .ranking {
   list-style: none;
 
-  padding: 0;
+  display: none;
 
-  margin: 15px auto 0;
+  width: min(90vw, 420px);
 
-  width: min(90vw, 400px);
+  margin: 18px auto 0;
 
-  font-size: clamp(13px, 4vw, 18px);
+  padding: 14px 18px;
+
+  border-radius: 15px;
+
+  background: rgba(0, 0, 0, 0.62);
+
+  font-size: clamp(14px, 4vw, 19px);
 
   line-height: 1.7;
+
+  text-align: left;
+
+  pointer-events: none;
 }
+
 
 /* =========================
    TUYAUX
@@ -316,20 +422,22 @@ body {
 
   z-index: 4;
 
-  background: linear-gradient(
-    90deg,
-    #2f8f2f,
-    #6ddd53,
-    #2f8f2f
-  );
+  background:
+    linear-gradient(
+      90deg,
+      #2f8f2f,
+      #6ddd53,
+      #2f8f2f
+    );
 
   border: 3px solid #164d16;
 
   border-radius: 8px;
 }
 
+
 /* =========================
-   PETITS TELEPHONES
+   SMARTPHONE
 ========================= */
 
 @media (max-width: 480px) {
@@ -361,21 +469,24 @@ body {
   }
 
   #loginBtn {
-    min-height: 50px;
+    min-height: 52px;
 
-    font-size: 17px;
+    font-size: 18px;
+  }
+
+  .replay-btn {
+    width: 82vw;
   }
 }
 
+
 /* =========================
-   TELEPHONES TRES PETITS
+   PETITS ECRANS
 ========================= */
 
 @media (max-height: 700px) {
 
   .message {
-    top: 50%;
-
     max-height: 96dvh;
 
     padding-top: 14px;
@@ -383,7 +494,7 @@ body {
   }
 
   .game-logo {
-    font-size: 30px;
+    font-size: 29px;
   }
 
   .game-subtitle {
@@ -408,6 +519,6 @@ body {
   }
 
   .game-info {
-    margin-top: 8px;
+    margin-top: 7px;
   }
 }
