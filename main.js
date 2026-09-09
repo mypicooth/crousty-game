@@ -12,14 +12,14 @@ import {
 
 // Firebase 설정
 const firebaseConfig = {
-  apiKey: 'AIzaSyBepd6pzHsheESMVwgo5Ja2iTaYZg7MZFQ',
-  authDomain: 'flappy-bird-efdcb.firebaseapp.com',
-  databaseURL: 'https://flappy-bird-efdcb-default-rtdb.firebaseio.com',
-  projectId: 'flappy-bird-efdcb',
-  storageBucket: 'flappy-bird-efdcb.appspot.com',
-  messagingSenderId: '725142925346',
-  appId: '1:725142925346:web:e765bff9199b96bff0da7b',
-  measurementId: 'G-8727RQ0CKS',
+  apiKey: "AIzaSyAGu61hEih85vRpKUN0zXOrVmOFXR-WQls",
+  authDomain: "crousty-game-b9c17.firebaseapp.com",
+  databaseURL: "https://crousty-game-b9c17-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "crousty-game-b9c17",
+  storageBucket: "crousty-game-b9c17.firebasestorage.app",
+  messagingSenderId: "1032243559819",
+  appId: "1:1032243559819:web:2d547412cee8932087038e",
+  measurementId: "G-J4FZF4MPDE"
 };
 
 // Firebase 초기화
