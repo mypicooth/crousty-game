@@ -3,11 +3,8 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/fireba
 import {
   getDatabase,
   ref,
-  set,
   get,
-  update,
-  query,
-  orderByChild
+  update
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
 // -------------------------
@@ -45,6 +42,7 @@ let lastName = "";
 let email = "";
 let phone = "";
 let gamesPlayed = 0;
+let bestScore = 0;
 
 // -------------------------
 // VARIABLES JEU
@@ -69,6 +67,24 @@ let game_state = 'Start';
 const replayButton = document.getElementById('replayBtn');
 let actionPending = false;
 let scoreSave = Promise.resolve();
+let scoreSaved = true;
+const rankingScreen = document.getElementById('rankingScreen');
+const rankingStatus = document.getElementById('rankingStatus');
+const rankingRetry = document.getElementById('rankingRetry');
+
+async function withTimeout(operation) {
+  let timer;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error('Connexion trop lente')), 12000);
+      })
+    ]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
 
 // -------------------------
 // CREATION ID JOUEUR
@@ -87,32 +103,19 @@ async function savePlayerData() {
   const consentMarketing =
     document.getElementById('consentMarketing').checked;
 
-  const playerPrivateRef = ref(
-    db,
-    `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
-  );
-
-  const leaderboardRef = ref(
-    db,
-    `campaigns/${CAMPAIGN_ID}/leaderboard/${playerId}`
-  );
-
-  await set(playerPrivateRef, {
-    firstName,
-    lastName,
-    email,
-    phone,
-    consentMarketing,
-    consentGame: true,
-    createdAt: Date.now(),
-    gamesPlayed: 0
-  });
-
-  await set(leaderboardRef, {
-    displayName:
-      firstName + " " + lastName.charAt(0).toUpperCase() + ".",
-    highScore: 0
-  });
+  const campaignPath = `campaigns/${CAMPAIGN_ID}`;
+  const timestamp = Date.now();
+  await withTimeout(update(ref(db), {
+    [`${campaignPath}/players_private/${playerId}`]: {
+      firstName, lastName, email, phone, consentMarketing,
+      consentGame: true, consentTimestamp: timestamp,
+      createdAt: timestamp, gamesPlayed: 0, highScore: 0
+    },
+    [`${campaignPath}/leaderboard/${playerId}`]: {
+      displayName: firstName + ' ' + lastName.charAt(0).toUpperCase() + '.',
+      highScore: 0
+    }
+  }));
 }
 
 // -------------------------
@@ -120,90 +123,64 @@ async function savePlayerData() {
 // -------------------------
 
 async function endGame(score) {
-
-  const numericScore = Number(score);
-
-  const playerPrivateRef = ref(
-    db,
-    `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
-  );
-
-  const leaderboardRef = ref(
-    db,
-    `campaigns/${CAMPAIGN_ID}/leaderboard/${playerId}`
-  );
-
-  const scoreSnapshot = await get(leaderboardRef);
-
-  let previousHighScore = 0;
-
-  if (scoreSnapshot.exists()) {
-    previousHighScore =
-      Number(scoreSnapshot.val().highScore || 0);
-  }
-
-  const newHighScore =
-    Math.max(previousHighScore, numericScore);
-
-  await update(leaderboardRef, {
-    highScore: newHighScore
-  });
-
-  await update(playerPrivateRef, {
-    gamesPlayed: gamesPlayed,
-    lastPlayedAt: Date.now()
-  });
+  bestScore = Math.max(bestScore, Number(score));
+  const campaignPath = `campaigns/${CAMPAIGN_ID}`;
+  await withTimeout(update(ref(db), {
+    [`${campaignPath}/leaderboard/${playerId}/highScore`]: bestScore,
+    [`${campaignPath}/players_private/${playerId}/highScore`]: bestScore,
+    [`${campaignPath}/players_private/${playerId}/gamesPlayed`]: gamesPlayed,
+    [`${campaignPath}/players_private/${playerId}/lastPlayedAt`]: Date.now()
+  }));
+  scoreSaved = true;
 }
 
-// -------------------------
-// AFFICHAGE LEADERBOARD
-// -------------------------
+async function ensureScoreSaved() {
+  await scoreSave;
+  if (!scoreSaved) await endGame(bestScore);
+}
 
 async function showLeaderboard() {
+  const snapshot = await withTimeout(get(ref(db, `campaigns/${CAMPAIGN_ID}/leaderboard`)));
+  const rankingList = document.querySelector('.ranking');
+  rankingList.replaceChildren();
+  const players = Object.values(snapshot.val() || {})
+    .filter(player => player && typeof player.displayName === 'string'
+      && Number.isFinite(Number(player.highScore)))
+    .sort((a, b) => Number(b.highScore) - Number(a.highScore))
+    .slice(0, 10);
 
-  const leaderboardRootRef = ref(
-    db,
-    `campaigns/${CAMPAIGN_ID}/leaderboard`
-  );
-
-  const leaderboardQuery =
-    query(
-      leaderboardRootRef,
-      orderByChild('highScore')
-    );
-
-  const snapshot = await get(leaderboardQuery);
-
-  const rankingList =
-    document.querySelector('.ranking');
-
-  rankingList.innerHTML = '';
-
-  if (!snapshot.exists()) {
-    return;
+  for (const [index, player] of players.entries()) {
+    const li = document.createElement('li');
+    li.textContent = `${index + 1}. ${player.displayName} — ${Number(player.highScore)} pts`;
+    rankingList.appendChild(li);
   }
+  rankingStatus.textContent = players.length ? '' : 'Aucun score pour le moment.';
+}
 
-  const data = snapshot.val();
-
-  const sortedPlayers =
-    Object.values(data).sort(
-      (a, b) =>
-        Number(b.highScore) -
-        Number(a.highScore)
-    );
-
-  sortedPlayers
-    .slice(0, 10)
-    .forEach((player, index) => {
-
-      const li =
-        document.createElement('li');
-
-      li.textContent =
-        `${index + 1}. ${player.displayName} — ${player.highScore} pts`;
-
-      rankingList.appendChild(li);
-    });
+async function displayFinalRanking() {
+  game_state = 'ShowRanking';
+  document.querySelectorAll('.pipe_sprite').forEach(pipe => pipe.remove());
+  bird.hidden = true;
+  message.hidden = true;
+  message2.textContent = '';
+  replayButton.style.display = 'none';
+  document.querySelector('.score').hidden = true;
+  rankingScreen.hidden = false;
+  document.getElementById('bestScore').textContent = `Ton meilleur score : ${bestScore} pts`;
+  document.getElementById('rankingTitle').focus();
+  rankingRetry.hidden = true;
+  rankingStatus.textContent = 'Enregistrement du score…';
+  try {
+    await ensureScoreSaved();
+    rankingStatus.textContent = 'Chargement du classement…';
+    await showLeaderboard();
+  } catch (error) {
+    console.error('Classement indisponible', error);
+    rankingStatus.textContent = scoreSaved
+      ? 'Impossible de charger le classement. Vérifie ta connexion puis réessaie.'
+      : 'Ton score n’a pas encore pu être enregistré. Vérifie ta connexion puis réessaie.';
+    rankingRetry.hidden = false;
+  }
 }
 
 // -------------------------
@@ -213,7 +190,7 @@ async function showLeaderboard() {
 async function handleLoginAndStartGame() {
 
   if (game_state === 'ShowRanking') {
-    location.reload();
+    await displayFinalRanking();
     return;
   }
 
@@ -264,42 +241,32 @@ async function handleLoginAndStartGame() {
 
       gamesPlayed = 0;
 
-      await savePlayerData();
+      try {
+        await savePlayerData();
+      } catch (error) {
+        playerId = '';
+        throw error;
+      }
     }
 
     if (gamesPlayed >= MAX_GAMES) {
 
-      await scoreSave;
-      await showLeaderboard();
-
-      message.hidden = true;
-      document.querySelector('.ranking').style.display = 'block';
-      replayButton.style.display = 'none';
-
-      message2.innerHTML =
-        `TES ${MAX_GAMES} PARTIES SONT TERMINÉES`;
-
-      score_title.innerHTML =
-        '🏆 TOP 10 CROUSTY';
-
-      score_val.innerHTML = '';
-
-      game_state = 'ShowRanking';
+      await displayFinalRanking();
 
       return;
     }
 
-    await scoreSave;
-    gamesPlayed++;
+    await ensureScoreSaved();
 
     const playerPrivateRef = ref(
       db,
       `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
     );
 
-    await update(playerPrivateRef, {
-      gamesPlayed: gamesPlayed
-    });
+    await withTimeout(update(playerPrivateRef, {
+      gamesPlayed: gamesPlayed + 1
+    }));
+    gamesPlayed++;
 
     document
       .querySelectorAll('.pipe_sprite')
@@ -347,6 +314,7 @@ async function requestStart() {
   actionPending = true;
   loginButton.disabled = true;
   replayButton.disabled = true;
+  rankingRetry.disabled = true;
   try {
     await handleLoginAndStartGame();
   } catch (error) {
@@ -356,11 +324,13 @@ async function requestStart() {
     actionPending = false;
     loginButton.disabled = false;
     replayButton.disabled = false;
+    rankingRetry.disabled = false;
   }
 }
 
 loginButton.addEventListener('click', requestStart);
 replayButton.addEventListener('click', requestStart);
+rankingRetry.addEventListener('click', requestStart);
 
 // -------------------------
 // ENTREE CLAVIER
@@ -390,15 +360,27 @@ function play() {
   let pipe_seperation = 0;
   const pipe_gap = 31;
   const controls = new AbortController();
+  const frames = new Set();
+  function schedule(callback) {
+    if (game_state !== 'Play') return;
+    const id = requestAnimationFrame(() => {
+      frames.delete(id);
+      callback();
+    });
+    frames.add(id);
+  }
 
   function finishGame() {
     if (game_state !== 'Play') return;
     game_state = 'End';
     controls.abort();
+    frames.forEach(cancelAnimationFrame);
+    frames.clear();
     message2.innerHTML = `GAME OVER<br>Score : ${score_val.textContent}`;
     replayButton.textContent = gamesPlayed < MAX_GAMES
       ? 'REJOUER' : 'VOIR LE CLASSEMENT';
     replayButton.style.display = 'block';
+    scoreSaved = false;
     scoreSave = endGame(score_val.textContent).catch(error => {
       console.error('Impossible de sauvegarder le score', error);
     });
@@ -425,6 +407,7 @@ function play() {
       e.key === 'ArrowUp' ||
       e.key === ' '
     ) {
+      e.preventDefault();
       jump();
     }
   }
@@ -592,7 +575,7 @@ function play() {
       }
     );
 
-    requestAnimationFrame(move);
+    schedule(move);
   }
 
   // -------------------------
@@ -626,9 +609,7 @@ function play() {
       return;
     }
 
-    requestAnimationFrame(
-      applyGravity
-    );
+    schedule(applyGravity);
   }
 
   // -------------------------
@@ -700,12 +681,10 @@ function play() {
 
     pipe_seperation++;
 
-    requestAnimationFrame(
-      createPipe
-    );
+    schedule(createPipe);
   }
 
-  requestAnimationFrame(move);
-  requestAnimationFrame(applyGravity);
-  requestAnimationFrame(createPipe);
+  schedule(move);
+  schedule(applyGravity);
+  schedule(createPipe);
 }

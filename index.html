@@ -124,9 +124,16 @@
 
     <span class="score_val"></span>
 
-    <ul class="ranking"></ul>
-
   </div>
+
+  <section id="rankingScreen" class="ranking-screen" aria-labelledby="rankingTitle" hidden>
+    <h1 id="rankingTitle" tabindex="-1">🏆 TOP 10 CROUSTY</h1>
+    <p id="bestScore" class="best-score"></p>
+    <p class="ranking-caption">Tes 3 parties sont terminées. Merci d’avoir joué !</p>
+    <ul class="ranking" aria-label="Les dix meilleurs scores"></ul>
+    <p id="rankingStatus" role="status"></p>
+    <button id="rankingRetry" type="button" hidden>RÉESSAYER</button>
+  </section>
 
 </body>
 </html>
