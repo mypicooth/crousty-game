@@ -1,71 +1,129 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
   <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+
+    <title>Crousty Game</title>
+
     <link rel="stylesheet" href="style.css" />
-    <meta http-equiv="Refresh" />
-    <title>flappy bird</title>
-    <script type="module">
-      // Firebase SDK 모듈 방식으로 사용
-      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
-      import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-      import { getAuth } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-      import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-analytics.js';
-    </script>
+
     <script defer type="module" src="main.js"></script>
   </head>
+
   <body>
+
+    <!-- Fond du jeu -->
     <div class="background"></div>
-    <img class="bird" src="/img/logo.png" alt="bird-img" />
-    <span class="message">
-      <span style="color: rgb(255, 215, 0)">F</span>
-      <span style="color: rgb(255, 88, 171)">L</span>
-      <span style="color: rgb(255, 165, 46)">A</span>
-      <span style="color: rgb(82, 8, 209)">P</span>
-      <span style="color: rgb(56, 172, 21)">P</span>
-      <span style="color: rgb(133, 44, 184)">Y</span>
-      <br />
-      <span style="color: rgb(255, 215, 0)">B</span>
-      <span style="color: rgb(243, 176, 195)">I</span>
-      <span style="color: rgb(255, 88, 171)">R</span>
-      <span style="color: rgb(255, 165, 46)">D</span>
-      <div class="user-info">
-        <input
-          type="text"
-          id="name"
-          placeholder="이름"
-          required
-          style="padding: 10px"
-          inputmode="text"
-        />
-        <input
-          type="text"
-          id="department"
-          placeholder="학과"
-          required
-          style="padding: 10px"
-          inputmode="text"
-        />
-        <input
-          type="text"
-          id="studentId"
-          placeholder="학번"
-          required
-          style="padding: 10px"
-          inputmode="numeric"
-        />
+
+    <!-- Personnage -->
+    <img
+      class="bird"
+      src="/img/logo.png"
+      alt="Crousty Game"
+    />
+
+    <!-- Écran d'accueil -->
+    <div class="message" id="welcomeScreen">
+
+      <div class="game-logo">
+        CROUSTY GAME
       </div>
-      <button
-        id="loginBtn"
-        style="margin-top: 10px; padding: 10px 20px; font-size: 16px"
-      >
-        게임 시작
+
+      <div class="game-subtitle">
+        Fais le meilleur score !
+      </div>
+
+      <div class="user-info">
+
+        <input
+          type="text"
+          id="firstName"
+          placeholder="Prénom *"
+          required
+          autocomplete="given-name"
+          inputmode="text"
+        />
+
+        <input
+          type="text"
+          id="lastName"
+          placeholder="Nom *"
+          required
+          autocomplete="family-name"
+          inputmode="text"
+        />
+
+        <input
+          type="email"
+          id="email"
+          placeholder="E-mail *"
+          required
+          autocomplete="email"
+          inputmode="email"
+        />
+
+        <input
+          type="tel"
+          id="phone"
+          placeholder="Téléphone *"
+          required
+          autocomplete="tel"
+          inputmode="tel"
+        />
+
+        <label class="consent-line">
+          <input
+            type="checkbox"
+            id="consentGame"
+            required
+          />
+
+          <span>
+            J'accepte le règlement du jeu et la politique de confidentialité.
+          </span>
+        </label>
+
+        <label class="consent-line">
+          <input
+            type="checkbox"
+            id="consentMarketing"
+          />
+
+          <span>
+            J'accepte de recevoir les offres et actualités de Crousty.
+          </span>
+        </label>
+
+      </div>
+
+      <button id="loginBtn">
+        JOUER
       </button>
-    </span>
-    <span class="message2"> </span>
-    <div class="score" style="padding-left: 15px">
-      <span class="score_title"></span>
-      <span class="score_val"></span>
-      <ul class="ranking"></ul>
+
+      <div class="game-info">
+        3 parties pour réaliser ton meilleur score
+      </div>
+
     </div>
+
+    <!-- Message Game Over -->
+    <div class="message2"></div>
+
+    <!-- Score -->
+    <div class="score">
+
+      <span class="score_title"></span>
+
+      <span class="score_val"></span>
+
+      <!-- Leaderboard -->
+      <ul class="ranking"></ul>
+
+    </div>
+
   </body>
 </html>
