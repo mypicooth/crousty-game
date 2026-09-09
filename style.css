@@ -1,153 +1,413 @@
 * {
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
 }
 
-@font-face {
-  font-family: 'bitbit';
-  src: url('//cdn.df.nexon.com/img/common/font/DNFBitBit-Regular.woff'),
-    url('//cdn.df.nexon.com/img/common/font/DNFBitBit-Regular.woff2');
-}
-
-/* @font-face {
-  font-family: 'fb';
-  src: url('font/flappy-bird-font.woff2') format('woff2'),
-    url('font/flappy-bird-font.woff') format('woff'),
-    url('font/flappy-bird-font.ttf') format('truetype');
-} */
-
-/* 깜빡이는 애니메이션 정의 */
-@keyframes blink {
-  0% {
-    opacity: 1; /* 처음에 완전히 보임 */
-  }
-  50% {
-    opacity: 0; /* 중간에 완전히 사라짐 */
-  }
-  100% {
-    opacity: 1; /* 다시 보이도록 */
-  }
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  touch-action: manipulation;
 }
 
 body {
-  height: 100vh;
-  width: 100vw;
+  position: relative;
+  background: #111;
 }
+
+/* =========================
+   FOND
+========================= */
 
 .background {
-  height: 100vh;
+  position: fixed;
+  inset: 0;
   width: 100vw;
-  background-color: skyblue;
-  /* background-image: url('background.jpg'); */
+  height: 100dvh;
+
   background-image: url('/img/background.jpg');
-  background-size: cover; /* 이미지가 요소를 가득 채우도록 함 */
-  background-repeat: no-repeat; /* 이미지 반복 금지 */
-  background-position: bottom; /* 이미지를 상단에 맞춤 */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  z-index: 0;
 }
+
+/* =========================
+   PERSONNAGE
+========================= */
 
 .bird {
-  height: 60px;
-  width: 85px;
   position: fixed;
+
+  width: clamp(48px, 12vw, 85px);
+  height: auto;
+
   top: 40vh;
-  left: 20vw;
-  z-index: 100;
+  left: 18vw;
+
+  z-index: 5;
+
+  object-fit: contain;
+  pointer-events: none;
 }
 
-/* 공통 파이프 스타일 */
-.pipe_sprite {
-  position: fixed;
-  left: 100vw;
-  height: 70vh;
-  width: 6vw;
-  /* border: 5px solid rgb(43, 43, 43); */
-}
-
-/* 위쪽 파이프 스타일 */
-.pipe_sprite_top {
-  background-image: url('/img/pipe_top.png'); /* 위쪽 파이프 이미지 */
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: bottom;
-}
-
-/* 아래쪽 파이프 스타일 */
-.pipe_sprite_bottom {
-  background-image: url('/img/pipe_bottom.png'); /* 아래쪽 파이프 이미지 */
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: top;
-}
+/* =========================
+   ECRAN D'ACCUEIL
+========================= */
 
 .message {
-  font-family: 'bitbit', sans-serif;
-  /* font-family: 'fb', sans-serif; */
   position: fixed;
-  z-index: 100;
-  height: 10vh;
-  font-size: 13vh;
-  font-weight: 100;
-  top: 12vh;
-  left: 32vw;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(92vw, 440px);
+  max-height: 92dvh;
+
+  padding: 22px 18px;
+
+  background: rgba(255, 255, 255, 0.96);
+
+  border-radius: 22px;
+
   text-align: center;
-  text-shadow: -4px -4px 0 black, /* 왼쪽 위 */ 4px -4px 0 black,
-    /* 오른쪽 위 */ -4px 4px 0 black, /* 왼쪽 아래 */ 4px 4px 0 black; /* 오른쪽 아래 */
+
+  z-index: 20;
+
+  overflow-y: auto;
+
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.28);
 }
 
-.message2 {
-  font-family: 'bitbit', sans-serif;
-  animation: blink 1s infinite; /* 1초마다 깜빡거림 */
-  position: fixed;
-  z-index: 10;
-  height: 10vh;
-  font-size: 10vh;
-  font-weight: 100;
-  color: white;
-  top: 4vh;
-  left: 34vw;
-  text-align: center;
-  text-shadow: -3px -3px 0 black, /* 왼쪽 위 */ 3px -3px 0 black,
-    /* 오른쪽 위 */ -3px 3px 0 black, /* 왼쪽 아래 */ 3px 3px 0 black; /* 오른쪽 아래 */
+.game-logo {
+  font-size: clamp(28px, 9vw, 48px);
+
+  font-weight: 900;
+
+  line-height: 1;
+
+  margin-bottom: 10px;
+
+  letter-spacing: -1px;
 }
+
+.game-subtitle {
+  font-size: clamp(15px, 4vw, 18px);
+
+  margin-bottom: 18px;
+
+  font-weight: 600;
+}
+
+/* =========================
+   FORMULAIRE
+========================= */
+
+.user-info {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  width: 100%;
+}
+
+.user-info input[type="text"],
+.user-info input[type="email"],
+.user-info input[type="tel"] {
+  width: 100%;
+
+  min-height: 48px;
+
+  border: 1px solid #ccc;
+
+  border-radius: 12px;
+
+  padding: 12px 14px;
+
+  font-size: 16px;
+
+  background: white;
+
+  outline: none;
+}
+
+.user-info input:focus {
+  border-color: #111;
+}
+
+/* =========================
+   CONSENTEMENTS
+========================= */
+
+.consent-line {
+  display: flex;
+
+  align-items: flex-start;
+
+  gap: 9px;
+
+  width: 100%;
+
+  text-align: left;
+
+  font-size: 12px;
+
+  line-height: 1.35;
+
+  margin-top: 3px;
+}
+
+.consent-line input {
+  margin-top: 2px;
+
+  min-width: 18px;
+  min-height: 18px;
+}
+
+/* =========================
+   BOUTON JOUER
+========================= */
+
+#loginBtn {
+  width: 100%;
+
+  min-height: 52px;
+
+  margin-top: 16px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  cursor: pointer;
+
+  background: #111;
+
+  color: white;
+}
+
+#loginBtn:active {
+  transform: scale(0.98);
+}
+
+.game-info {
+  margin-top: 12px;
+
+  font-size: 12px;
+
+  opacity: 0.7;
+}
+
+/* =========================
+   SCORE
+========================= */
 
 .score {
-  font-family: 'bitbit', sans-serif;
   position: fixed;
-  width: 100%;
-  top: 25%;
+
+  top: 14px;
+  left: 50%;
+
+  transform: translateX(-50%);
+
+  width: min(94vw, 500px);
+
   text-align: center;
-  z-index: 10;
-  height: 10vh;
-  font-size: 8vh;
-  font-weight: 100;
-  padding-top: 20px;
+
   color: white;
+
+  z-index: 15;
+
+  pointer-events: none;
+
+  text-shadow:
+    0 2px 7px rgba(0, 0, 0, 0.8);
+}
+
+.score_title {
+  display: block;
+
+  font-size: clamp(16px, 5vw, 24px);
+
+  font-weight: 800;
 }
 
 .score_val {
+  display: block;
+
+  font-size: clamp(38px, 12vw, 72px);
+
+  font-weight: 900;
+
+  line-height: 1;
+}
+
+/* =========================
+   GAME OVER
+========================= */
+
+.message2 {
+  position: fixed;
+
+  top: 50%;
+  left: 50%;
+
+  transform: translate(-50%, -50%);
+
+  width: min(90vw, 420px);
+
+  text-align: center;
+
   color: white;
-  text-shadow: -2px -2px 0 black, /* 왼쪽 위 */ 2px -2px 0 black,
-    /* 오른쪽 위 */ -2px 2px 0 black, /* 왼쪽 아래 */ 2px 2px 0 black; /* 오른쪽 아래 */
+
+  font-weight: 900;
+
+  font-size: clamp(22px, 7vw, 38px);
+
+  line-height: 1.25;
+
+  z-index: 25;
+
+  text-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.8);
 }
 
-ul {
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* 세로 가운데 정렬 */
-  align-items: center; /* 가로 가운데 정렬 */
-  position: relative;
-  height: 53vh; /* 부모 요소의 높이를 100% 설정 (화면 전체 기준) */
-  left: -2%;
-  width: 115vw; /* 부모 요소의 너비를 100%로 설정 */
-}
+/* =========================
+   CLASSEMENT
+========================= */
 
-ul li {
+.ranking {
   list-style: none;
-  padding-top: 16px;
-  font-size: 30px;
-  color: darkblue;
-  text-align: left; /* 텍스트를 왼쪽 정렬 */
-  position: relative;
-  width: 35%; /* li의 너비를 50%로 설정 (화면 전체의 50%) */
+
+  padding: 0;
+
+  margin: 15px auto 0;
+
+  width: min(90vw, 400px);
+
+  font-size: clamp(13px, 4vw, 18px);
+
+  line-height: 1.7;
+}
+
+/* =========================
+   TUYAUX
+========================= */
+
+.pipe_sprite {
+  position: fixed;
+
+  width: clamp(52px, 15vw, 90px);
+
+  height: 70vh;
+
+  z-index: 4;
+
+  background: linear-gradient(
+    90deg,
+    #2f8f2f,
+    #6ddd53,
+    #2f8f2f
+  );
+
+  border: 3px solid #164d16;
+
+  border-radius: 8px;
+}
+
+/* =========================
+   PETITS TELEPHONES
+========================= */
+
+@media (max-width: 480px) {
+
+  .message {
+    width: 94vw;
+
+    padding: 18px 15px;
+
+    border-radius: 18px;
+  }
+
+  .game-logo {
+    font-size: 34px;
+  }
+
+  .bird {
+    left: 14vw;
+
+    width: 58px;
+  }
+
+  .user-info input[type="text"],
+  .user-info input[type="email"],
+  .user-info input[type="tel"] {
+    min-height: 46px;
+
+    font-size: 16px;
+  }
+
+  #loginBtn {
+    min-height: 50px;
+
+    font-size: 17px;
+  }
+}
+
+/* =========================
+   TELEPHONES TRES PETITS
+========================= */
+
+@media (max-height: 700px) {
+
+  .message {
+    top: 50%;
+
+    max-height: 96dvh;
+
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .game-logo {
+    font-size: 30px;
+  }
+
+  .game-subtitle {
+    margin-bottom: 10px;
+  }
+
+  .user-info {
+    gap: 7px;
+  }
+
+  .user-info input[type="text"],
+  .user-info input[type="email"],
+  .user-info input[type="tel"] {
+    min-height: 42px;
+
+    padding-top: 9px;
+    padding-bottom: 9px;
+  }
+
+  #loginBtn {
+    margin-top: 10px;
+  }
+
+  .game-info {
+    margin-top: 8px;
+  }
 }
