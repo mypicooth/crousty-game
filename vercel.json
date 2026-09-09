@@ -1,0 +1,20 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/", "has": [{ "type": "host", "value": "admin.myicbooth.com" }], "destination": "/admin/index.html" },
+    { "source": "/admin", "destination": "/admin/index.html" }
+  ],
+  "headers": [
+    { "source": "/api/(.*)", "headers": [
+      { "key": "Cache-Control", "value": "no-store" },
+      { "key": "X-Content-Type-Options", "value": "nosniff" }
+    ] },
+    { "source": "/admin/(.*)", "headers": [
+      { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
+      { "key": "X-Frame-Options", "value": "DENY" },
+      { "key": "Referrer-Policy", "value": "same-origin" }
+    ] },
+    { "source": "/server/(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex" }] }
+  ]
+}

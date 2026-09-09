@@ -1,5 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { startFixedStepLoop } from './game-loop.mjs';
+import { loadManagedGame } from './managed-game.mjs';
 
 import {
   getDatabase,
@@ -30,8 +31,9 @@ const db = getDatabase(app);
 // CONFIG CAMPAGNE
 // -------------------------
 
-const CAMPAIGN_ID = "crousty_2026";
-const MAX_GAMES = 3;
+const managedGame = await loadManagedGame();
+const CAMPAIGN_ID = managedGame?.id || "crousty_2026";
+const MAX_GAMES = managedGame?.maxGames || 3;
 
 // -------------------------
 // VARIABLES JOUEUR
@@ -104,6 +106,13 @@ async function savePlayerData() {
   const consentMarketing =
     document.getElementById('consentMarketing').checked;
 
+  if (managedGame) {
+    const result = await managedGame.register({ firstName, lastName, email, phone, consentGame: true, consentMarketing });
+    gamesPlayed = result.gamesPlayed;
+    bestScore = result.highScore;
+    return;
+  }
+
   const campaignPath = `campaigns/${CAMPAIGN_ID}`;
   const timestamp = Date.now();
   await withTimeout(update(ref(db), {
@@ -125,6 +134,12 @@ async function savePlayerData() {
 
 async function endGame(score) {
   bestScore = Math.max(bestScore, Number(score));
+  if (managedGame) {
+    const result = await managedGame.finish(Number(score));
+    bestScore = result.highScore;
+    scoreSaved = true;
+    return;
+  }
   const campaignPath = `campaigns/${CAMPAIGN_ID}`;
   await withTimeout(update(ref(db), {
     [`${campaignPath}/leaderboard/${playerId}/highScore`]: bestScore,
@@ -141,10 +156,12 @@ async function ensureScoreSaved() {
 }
 
 async function showLeaderboard() {
-  const snapshot = await withTimeout(get(ref(db, `campaigns/${CAMPAIGN_ID}/leaderboard`)));
+  const data = managedGame
+    ? await managedGame.leaderboard()
+    : (await withTimeout(get(ref(db, `campaigns/${CAMPAIGN_ID}/leaderboard`)))).val() || {};
   const rankingList = document.querySelector('.ranking');
   rankingList.replaceChildren();
-  const players = Object.values(snapshot.val() || {})
+  const players = Object.values(data)
     .filter(player => player && typeof player.displayName === 'string'
       && Number.isFinite(Number(player.highScore)))
     .sort((a, b) => Number(b.highScore) - Number(a.highScore))
@@ -259,15 +276,21 @@ async function handleLoginAndStartGame() {
 
     await ensureScoreSaved();
 
-    const playerPrivateRef = ref(
-      db,
-      `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
-    );
+    if (managedGame) {
+      const result = await managedGame.start();
+      gamesPlayed = result.gamesPlayed;
+      bestScore = result.highScore;
+    } else {
+      const playerPrivateRef = ref(
+        db,
+        `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
+      );
 
-    await withTimeout(update(playerPrivateRef, {
-      gamesPlayed: gamesPlayed + 1
-    }));
-    gamesPlayed++;
+      await withTimeout(update(playerPrivateRef, {
+        gamesPlayed: gamesPlayed + 1
+      }));
+      gamesPlayed++;
+    }
 
     document
       .querySelectorAll('.pipe_sprite')
@@ -279,7 +302,7 @@ async function handleLoginAndStartGame() {
     bird_props = bird.getBoundingClientRect();
     background = document.querySelector('.background').getBoundingClientRect();
 
-    move_speed = 5;
+    move_speed = 5 * (managedGame?.speedFactor || 1);
     gravity = 0.65;
 
     game_state = 'Countdown';
@@ -320,7 +343,7 @@ async function requestStart() {
     await handleLoginAndStartGame();
   } catch (error) {
     console.error(error);
-    alert('Connexion impossible. Réessaie dans un instant.');
+    alert(managedGame ? error.message : 'Connexion impossible. Réessaie dans un instant.');
   } finally {
     actionPending = false;
     loginButton.disabled = false;
@@ -358,13 +381,14 @@ document.addEventListener(
 function startCountdown() {
   const countdown = document.getElementById('countdown');
   const countdownValue = document.getElementById('countdownValue');
-  countdownValue.textContent = '3';
+  const seconds = managedGame?.countdownSeconds || 3;
+  countdownValue.textContent = String(seconds);
   countdown.hidden = false;
   let ticks = 0;
   const controls = new AbortController();
   const loop = startFixedStepLoop(() => {
     ticks++;
-    if (ticks >= 180) {
+    if (ticks >= seconds * 60) {
       controls.abort();
       countdown.hidden = true;
       bird_props = bird.getBoundingClientRect();
@@ -373,7 +397,7 @@ function startCountdown() {
       play();
       return false;
     }
-    const remaining = String(3 - Math.floor(ticks / 60));
+    const remaining = String(seconds - Math.floor(ticks / 60));
     if (countdownValue.textContent !== remaining) countdownValue.textContent = remaining;
   });
   document.addEventListener('visibilitychange', loop.resetClock, { signal: controls.signal });
@@ -383,7 +407,7 @@ function play() {
 
   let bird_dy = 0;
   let pipe_seperation = 0;
-  const pipe_gap = 31;
+  const pipe_gap = managedGame?.gap || 31;
   const controls = new AbortController();
   const loop = startFixedStepLoop(() => {
     move();
@@ -556,7 +580,7 @@ function play() {
                 .backgroundImage =
                   "url('/img/background2.jpg')";
 
-              move_speed = 7;
+              move_speed = 7 * (managedGame?.speedFactor || 1);
               gravity = 0.75;
             }
 
@@ -570,7 +594,7 @@ function play() {
                 .backgroundImage =
                   "url('/img/background3.png')";
 
-              move_speed = 10;
+              move_speed = 10 * (managedGame?.speedFactor || 1);
               gravity = 0.9;
             }
 
@@ -584,7 +608,7 @@ function play() {
                 .backgroundImage =
                   "url('/img/background4.jpg')";
 
-              move_speed = 15;
+              move_speed = 15 * (managedGame?.speedFactor || 1);
               gravity = 1.2;
             }
           }

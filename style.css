@@ -24,6 +24,12 @@ body {
   position: relative;
 }
 
+.brand-logo { display: block; width: min(65%, 180px); max-height: 85px; object-fit: contain; margin: 0 auto 12px; }
+.custom-background .background { background-image: var(--game-background) !important; }
+.custom-pipes .pipe_sprite { background-image: var(--game-pipe); background-size: cover; background-position: center; }
+#countdownValue, .best-score { color: var(--game-accent, #ffdc65); }
+.managed-game #loginBtn, .managed-game .replay-btn { background: var(--game-accent); color: #111; }
+
 
 /* =========================
    FOND
@@ -320,7 +326,7 @@ body {
 
 #countdownValue {
   display: block;
-  color: #ffdc65;
+  color: var(--game-accent, #ffdc65);
   font-size: clamp(64px, 15vh, 100px);
   line-height: 1;
 }
@@ -440,7 +446,7 @@ body {
 
 .best-score {
   margin: 16px 0;
-  color: #ffdc65;
+  color: var(--game-accent, #ffdc65);
   font-size: 24px;
   font-weight: 900;
 }
@@ -455,7 +461,7 @@ body {
   padding: 12px 24px;
   border: none;
   border-radius: 14px;
-  background: #ffdc65;
+  background: var(--game-accent, #ffdc65);
   color: #111;
   font-size: 18px;
   font-weight: 900;
