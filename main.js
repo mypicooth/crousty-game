@@ -66,6 +66,9 @@ let message2 = document.querySelector('.message2');
 let score_title = document.querySelector('.score_title');
 
 let game_state = 'Start';
+const replayButton = document.getElementById('replayBtn');
+let actionPending = false;
+let scoreSave = Promise.resolve();
 
 // -------------------------
 // CREATION ID JOUEUR
@@ -266,9 +269,12 @@ async function handleLoginAndStartGame() {
 
     if (gamesPlayed >= MAX_GAMES) {
 
+      await scoreSave;
       await showLeaderboard();
 
-      message.innerHTML = '';
+      message.hidden = true;
+      document.querySelector('.ranking').style.display = 'block';
+      replayButton.style.display = 'none';
 
       message2.innerHTML =
         `TES ${MAX_GAMES} PARTIES SONT TERMINÉES`;
@@ -283,6 +289,7 @@ async function handleLoginAndStartGame() {
       return;
     }
 
+    await scoreSave;
     gamesPlayed++;
 
     const playerPrivateRef = ref(
@@ -301,13 +308,16 @@ async function handleLoginAndStartGame() {
       );
 
     bird.style.top = '40vh';
+    bird_props = bird.getBoundingClientRect();
+    background = document.querySelector('.background').getBoundingClientRect();
 
     move_speed = 5;
     gravity = 0.65;
 
     game_state = 'Play';
 
-    message.innerHTML = '';
+    message.hidden = true;
+    replayButton.style.display = 'none';
 
     message2.innerHTML = '';
 
@@ -332,12 +342,25 @@ async function handleLoginAndStartGame() {
 const loginButton =
   document.getElementById('loginBtn');
 
-loginButton.addEventListener(
-  'click',
-  async () => {
+async function requestStart() {
+  if (actionPending || game_state === 'Play') return;
+  actionPending = true;
+  loginButton.disabled = true;
+  replayButton.disabled = true;
+  try {
     await handleLoginAndStartGame();
+  } catch (error) {
+    console.error(error);
+    alert('Connexion impossible. Réessaie dans un instant.');
+  } finally {
+    actionPending = false;
+    loginButton.disabled = false;
+    replayButton.disabled = false;
   }
-);
+}
+
+loginButton.addEventListener('click', requestStart);
+replayButton.addEventListener('click', requestStart);
 
 // -------------------------
 // ENTREE CLAVIER
@@ -351,7 +374,8 @@ document.addEventListener(
       e.key === 'Enter' &&
       game_state !== 'Play'
     ) {
-      await handleLoginAndStartGame();
+      e.preventDefault();
+      if (!e.repeat) await requestStart();
     }
   }
 );
@@ -365,6 +389,20 @@ function play() {
   let bird_dy = 0;
   let pipe_seperation = 0;
   const pipe_gap = 31;
+  const controls = new AbortController();
+
+  function finishGame() {
+    if (game_state !== 'Play') return;
+    game_state = 'End';
+    controls.abort();
+    message2.innerHTML = `GAME OVER<br>Score : ${score_val.textContent}`;
+    replayButton.textContent = gamesPlayed < MAX_GAMES
+      ? 'REJOUER' : 'VOIR LE CLASSEMENT';
+    replayButton.style.display = 'block';
+    scoreSave = endGame(score_val.textContent).catch(error => {
+      console.error('Impossible de sauvegarder le score', error);
+    });
+  }
 
   // -------------------------
   // SAUT
@@ -413,17 +451,14 @@ function play() {
 
   document.addEventListener(
     'keydown',
-    keyJump
-  );
-
-  document.addEventListener(
-    'touchend',
-    touchJump
+    keyJump,
+    { signal: controls.signal }
   );
 
   document.addEventListener(
     'pointerdown',
-    touchJump
+    touchJump,
+    { signal: controls.signal }
   );
 
   // -------------------------
@@ -443,6 +478,7 @@ function play() {
 
     pipeSprites.forEach(
       element => {
+        if (game_state !== 'Play') return;
 
         const pipeProps =
           element.getBoundingClientRect();
@@ -472,23 +508,7 @@ function play() {
 
           if (collision) {
 
-            game_state = 'End';
-
-            message2.innerHTML =
-              `GAME OVER<br>Score : ${score_val.innerHTML}<br>`;
-
-            endGame(
-              score_val.innerHTML
-            );
-
-            setTimeout(() => {
-
-              message2.innerHTML +=
-                gamesPlayed < MAX_GAMES
-                  ? 'APPUIE SUR ENTRÉE OU JOUER POUR REJOUER'
-                  : 'APPUIE SUR ENTRÉE POUR VOIR LE CLASSEMENT';
-
-            }, 300);
+            finishGame();
 
             return;
           }
@@ -601,14 +621,7 @@ function play() {
         background.bottom
     ) {
 
-      game_state = 'End';
-
-      message2.innerHTML =
-        `GAME OVER<br>Score : ${score_val.innerHTML}<br>`;
-
-      endGame(
-        score_val.innerHTML
-      );
+      finishGame();
 
       return;
     }
