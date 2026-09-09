@@ -1,16 +1,19 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+
 import {
   getDatabase,
   ref,
   set,
   get,
-  child,
   update,
   query,
-  orderByChild,
+  orderByChild
 } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js';
 
-// Firebase 설정
+// -------------------------
+// FIREBASE
+// -------------------------
+
 const firebaseConfig = {
   apiKey: "AIzaSyAGu61hEih85vRpKUN0zXOrVmOFXR-WQls",
   authDomain: "crousty-game-b9c17.firebaseapp.com",
@@ -22,363 +25,674 @@ const firebaseConfig = {
   measurementId: "G-J4FZF4MPDE"
 };
 
-// Firebase 초기화
 const app = initializeApp(firebaseConfig);
-const db = getDatabase(app); // Realtime Database 초기화
+const db = getDatabase(app);
 
-// 전역 변수 선언
-let globalName = '';
-let globalDepartment = '';
-let globalStudentId = '';
-let globalGamesPlay = 0;
+// -------------------------
+// CONFIG CAMPAGNE
+// -------------------------
 
-// 사용자 정보를 저장하는 함수
-async function saveUserData(studentId, name, department) {
-  try {
-    const userRef = ref(db, 'users/' + studentId);
-    await set(userRef, {
-      name: name,
-      department: department,
-      studentId: studentId,
-      gamesPlayed: 0,
-      highScore: 0,
-    });
-    console.log('사용자 정보가 성공적으로 저장되었습니다.');
-  } catch (error) {
-    console.error('사용자 정보 저장 실패:', error);
-  }
-}
+const CAMPAIGN_ID = "crousty_2026";
+const MAX_GAMES = 3;
 
-// 게임 종료 후 점수 저장
-// 전역 변수 사용 예시 (게임 종료 시 데이터 저장)
-async function endGame(score) {
-  const userRef = ref(db, 'users/' + globalStudentId);
+// -------------------------
+// VARIABLES JOUEUR
+// -------------------------
 
-  const snapshot = await get(userRef);
-  if (snapshot.exists()) {
-    const userData = snapshot.val();
-    const highScore = Math.max(userData.highScore, score); // 최고 점수 갱신
+let playerId = "";
+let firstName = "";
+let lastName = "";
+let email = "";
+let phone = "";
+let gamesPlayed = 0;
 
-    // 업데이트된 최고 점수와 게임 플레이 수 저장
-    await update(userRef, {
-      // gamesPlayed: userData.gamesPlayed + 1,
-      highScore: highScore,
-    });
-    console.log('게임 결과 저장 완료:', highScore);
-  } else {
-    console.error('사용자 데이터를 찾을 수 없습니다.');
-  }
-}
+// -------------------------
+// VARIABLES JEU
+// -------------------------
 
-// 배경 스크롤 속도
 let move_speed = 5;
-
-// 중력 상수 값
 let gravity = 0.65;
 
-// 새 요소를 참조
 let bird = document.querySelector('.bird');
-
-// 새 요소의 속성 가져오기
 let bird_props = bird.getBoundingClientRect();
-let background = document.querySelector('.background').getBoundingClientRect();
 
-// 점수 요소를 참조
+let background = document
+  .querySelector('.background')
+  .getBoundingClientRect();
+
 let score_val = document.querySelector('.score_val');
 let message = document.querySelector('.message');
 let message2 = document.querySelector('.message2');
 let score_title = document.querySelector('.score_title');
 
-// 게임 상태를 초기화
 let game_state = 'Start';
 
-// 공통 로그인 후 게임 시작 로직을 함수로 추출
+// -------------------------
+// CREATION ID JOUEUR
+// -------------------------
+
+function createPlayerId() {
+  return crypto.randomUUID();
+}
+
+// -------------------------
+// SAUVEGARDE JOUEUR
+// -------------------------
+
+async function savePlayerData() {
+
+  const consentMarketing =
+    document.getElementById('consentMarketing').checked;
+
+  const playerPrivateRef = ref(
+    db,
+    `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
+  );
+
+  const leaderboardRef = ref(
+    db,
+    `campaigns/${CAMPAIGN_ID}/leaderboard/${playerId}`
+  );
+
+  await set(playerPrivateRef, {
+    firstName,
+    lastName,
+    email,
+    phone,
+    consentMarketing,
+    consentGame: true,
+    createdAt: Date.now(),
+    gamesPlayed: 0
+  });
+
+  await set(leaderboardRef, {
+    displayName:
+      firstName + " " + lastName.charAt(0).toUpperCase() + ".",
+    highScore: 0
+  });
+}
+
+// -------------------------
+// ENREGISTREMENT SCORE
+// -------------------------
+
+async function endGame(score) {
+
+  const numericScore = Number(score);
+
+  const playerPrivateRef = ref(
+    db,
+    `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
+  );
+
+  const leaderboardRef = ref(
+    db,
+    `campaigns/${CAMPAIGN_ID}/leaderboard/${playerId}`
+  );
+
+  const scoreSnapshot = await get(leaderboardRef);
+
+  let previousHighScore = 0;
+
+  if (scoreSnapshot.exists()) {
+    previousHighScore =
+      Number(scoreSnapshot.val().highScore || 0);
+  }
+
+  const newHighScore =
+    Math.max(previousHighScore, numericScore);
+
+  await update(leaderboardRef, {
+    highScore: newHighScore
+  });
+
+  await update(playerPrivateRef, {
+    gamesPlayed: gamesPlayed,
+    lastPlayedAt: Date.now()
+  });
+}
+
+// -------------------------
+// AFFICHAGE LEADERBOARD
+// -------------------------
+
+async function showLeaderboard() {
+
+  const leaderboardRootRef = ref(
+    db,
+    `campaigns/${CAMPAIGN_ID}/leaderboard`
+  );
+
+  const leaderboardQuery =
+    query(
+      leaderboardRootRef,
+      orderByChild('highScore')
+    );
+
+  const snapshot = await get(leaderboardQuery);
+
+  const rankingList =
+    document.querySelector('.ranking');
+
+  rankingList.innerHTML = '';
+
+  if (!snapshot.exists()) {
+    return;
+  }
+
+  const data = snapshot.val();
+
+  const sortedPlayers =
+    Object.values(data).sort(
+      (a, b) =>
+        Number(b.highScore) -
+        Number(a.highScore)
+    );
+
+  sortedPlayers
+    .slice(0, 10)
+    .forEach((player, index) => {
+
+      const li =
+        document.createElement('li');
+
+      li.textContent =
+        `${index + 1}. ${player.displayName} — ${player.highScore} pts`;
+
+      rankingList.appendChild(li);
+    });
+}
+
+// -------------------------
+// FORMULAIRE + DEMARRAGE
+// -------------------------
+
 async function handleLoginAndStartGame() {
+
   if (game_state === 'ShowRanking') {
     location.reload();
     return;
   }
 
   if (game_state !== 'Play') {
-    if (
-      globalName === '' ||
-      globalDepartment === '' ||
-      globalStudentId === ''
-    ) {
-      const name = document.getElementById('name').value;
-      const department = document.getElementById('department').value;
-      const studentId = document.getElementById('studentId').value;
-      if (!name || !department || !studentId) {
-        alert('모든 정보를 입력해주세요.');
+
+    if (!playerId) {
+
+      firstName =
+        document.getElementById('firstName')
+        .value.trim();
+
+      lastName =
+        document.getElementById('lastName')
+        .value.trim();
+
+      email =
+        document.getElementById('email')
+        .value.trim();
+
+      phone =
+        document.getElementById('phone')
+        .value.trim();
+
+      const consentGame =
+        document.getElementById('consentGame')
+        .checked;
+
+      if (
+        !firstName ||
+        !lastName ||
+        !email ||
+        !phone
+      ) {
+        alert(
+          "Merci de remplir tous les champs obligatoires."
+        );
         return;
       }
 
-      globalName = name;
-      globalDepartment = department;
-      globalStudentId = studentId;
-      globalGamesPlay = 0;
-
-      await saveUserData(studentId, name, department);
-    } else if (globalGamesPlay >= 3) {
-      alert('3번의 기회를 다 소진했습니다. 로그인 화면으로 돌아갑니다.');
-
-      const usersRef = ref(db, 'users');
-      const highScoreQuery = query(usersRef, orderByChild('highScore'));
-      const snapshot = await get(highScoreQuery);
-
-      if (snapshot.exists()) {
-        const usersData = snapshot.val();
-        const sortedUsers = Object.entries(usersData).sort(
-          ([, userA], [, userB]) => userB.highScore - userA.highScore
+      if (!consentGame) {
+        alert(
+          "Vous devez accepter le règlement du jeu pour participer."
         );
-
-        const rankingListItems = document.querySelector('.ranking');
-        rankingListItems.innerHTML = ''; // 이전 순위 초기화
-
-        sortedUsers.slice(0, 10).forEach((user, index) => {
-          const li = document.createElement('li');
-          li.textContent = `${index + 1}위 ${user[1].name} ${
-            user[1].department
-          } ${user[1].studentId} ${user[1].highScore}점`;
-
-          li.style.color = 'white'; // 점수가 높으면 흰색으로
-          rankingListItems.appendChild(li);
-        });
+        return;
       }
 
+      playerId = createPlayerId();
+
+      gamesPlayed = 0;
+
+      await savePlayerData();
+    }
+
+    if (gamesPlayed >= MAX_GAMES) {
+
+      await showLeaderboard();
+
+      message.innerHTML = '';
+
+      message2.innerHTML =
+        `TES ${MAX_GAMES} PARTIES SONT TERMINÉES`;
+
+      score_title.innerHTML =
+        '🏆 TOP 10 CROUSTY';
+
+      score_val.innerHTML = '';
+
       game_state = 'ShowRanking';
+
       return;
     }
 
-    const userRef = ref(db, 'users/' + globalStudentId);
-    const snapshot = await get(userRef);
-    if (snapshot.exists()) {
-      const userData = snapshot.val();
-      await update(userRef, {
-        gamesPlayed: userData.gamesPlayed + 1,
-      });
-    }
+    gamesPlayed++;
 
-    document.querySelectorAll('.pipe_sprite').forEach((e) => e.remove());
+    const playerPrivateRef = ref(
+      db,
+      `campaigns/${CAMPAIGN_ID}/players_private/${playerId}`
+    );
+
+    await update(playerPrivateRef, {
+      gamesPlayed: gamesPlayed
+    });
+
+    document
+      .querySelectorAll('.pipe_sprite')
+      .forEach(
+        e => e.remove()
+      );
+
     bird.style.top = '40vh';
+
+    move_speed = 5;
+    gravity = 0.65;
+
     game_state = 'Play';
+
     message.innerHTML = '';
+
     message2.innerHTML = '';
-    score_title.innerHTML = '';
+
+    score_title.innerHTML =
+      `PARTIE ${gamesPlayed}/${MAX_GAMES}`;
+
     score_val.innerHTML = '0';
-    globalGamesPlay += 1;
-    document.querySelector('.background').style.backgroundImage =
-      "url('/img/background.jpg')";
+
+    document
+      .querySelector('.background')
+      .style.backgroundImage =
+        "url('/img/background.jpg')";
+
     play();
   }
 }
 
-document.addEventListener('keydown', async (e) => {
-  if (e.key === 'Enter') {
+// -------------------------
+// BOUTON JOUER
+// -------------------------
+
+const loginButton =
+  document.getElementById('loginBtn');
+
+loginButton.addEventListener(
+  'click',
+  async () => {
     await handleLoginAndStartGame();
   }
-});
+);
 
-document.addEventListener('touchend', async (e) => {
-  // 클릭한 요소가 입력창이나 버튼인 경우 무시
-  const targetTag = e.target.tagName.toLowerCase();
-  if (['input', 'button', 'label', 'select', 'textarea'].includes(targetTag)) {
-    return;
+// -------------------------
+// ENTREE CLAVIER
+// -------------------------
+
+document.addEventListener(
+  'keydown',
+  async (e) => {
+
+    if (
+      e.key === 'Enter' &&
+      game_state !== 'Play'
+    ) {
+      await handleLoginAndStartGame();
+    }
   }
+);
 
-  // global 변수들이 모두 입력되어 있지 않으면 실행하지 않음
-  if (!globalName || !globalDepartment || !globalStudentId) {
-    return;
-  }
-
-  await handleLoginAndStartGame();
-});
-
-// 게임 시작 버튼 클릭 시에만 handleLoginAndStartGame() 실행
-const loginButton = document.getElementById('loginBtn');
-loginButton.addEventListener('click', async () => {
-  await handleLoginAndStartGame();
-});
-
-document.querySelectorAll('input').forEach((el) => {
-  el.addEventListener('focus', () => {
-    setTimeout(() => {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300); // 키보드 올라오는 타이밍 감안해서 딜레이 줌
-  });
-});
+// -------------------------
+// JEU
+// -------------------------
 
 function play() {
-  function move() {
-    // 게임이 종료되었는지 감지
-    if (game_state != 'Play') return;
-
-    // 모든 파이프 요소를 참조
-    let pipe_sprite = document.querySelectorAll('.pipe_sprite');
-    pipe_sprite.forEach((element) => {
-      let pipe_sprite_props = element.getBoundingClientRect();
-      bird_props = bird.getBoundingClientRect();
-
-      // 화면 밖으로 나간 파이프는 삭제하여 메모리 절약
-      if (pipe_sprite_props.right <= 0) {
-        element.remove();
-      } else {
-        // 새와 파이프의 충돌 감지
-        if (
-          bird_props.left < pipe_sprite_props.left + pipe_sprite_props.width &&
-          bird_props.left + bird_props.width > pipe_sprite_props.left &&
-          bird_props.top < pipe_sprite_props.top + pipe_sprite_props.height &&
-          bird_props.top + bird_props.height > pipe_sprite_props.top
-        ) {
-          // 충돌이 발생하면 게임 상태를 변경하고 게임 종료
-          game_state = 'End';
-          message2.innerHTML = 'GAME OVER <br/> PRESS ENTER';
-          endGame(score_val.innerHTML);
-          // message.style.left = '26vw';
-          return;
-        } else {
-          // 플레이어가 파이프를 성공적으로 회피하면 점수 증가
-          if (
-            pipe_sprite_props.right < bird_props.left &&
-            pipe_sprite_props.right + move_speed >= bird_props.left &&
-            element.increase_score == '1'
-          ) {
-            score_val.innerHTML = +score_val.innerHTML + 1;
-            const audio = new Audio('/sound/Coin.mp3');
-            // 소리 재생
-            audio.play().catch((error) => {
-              console.error('소리 재생 중 오류 발생:', error);
-            });
-
-            if (score_val.innerHTML > 20) {
-              const backgroundDiv = document.querySelector('.background');
-              backgroundDiv.style.backgroundImage =
-                "url('/img/background2.jpg')"; // 새로운 이미지 경로
-              move_speed = 7; //move_speed 가 원래 5 -> 7
-              gravity = 0.75;
-            }
-
-            if (score_val.innerHTML > 40) {
-              const backgroundDiv = document.querySelector('.background');
-              backgroundDiv.style.backgroundImage =
-                "url('/img/background3.png')"; // 새로운 이미지 경로
-              move_speed = 10; //move_speed 가 원래 5 -> 7
-              gravity = 0.9;
-            }
-
-            if (score_val.innerHTML > 60) {
-              const backgroundDiv = document.querySelector('.background');
-              backgroundDiv.style.backgroundImage =
-                "url('/img/background4.jpg')"; // 새로운 이미지 경로
-              move_speed = 15; //move_speed 가 원래 5 -> 7
-              gravity = 1.2;
-            }
-          }
-          element.style.left = pipe_sprite_props.left - move_speed + 'px';
-          // element.style.left = '100px';
-        }
-      }
-    });
-
-    requestAnimationFrame(move);
-  }
-  requestAnimationFrame(move);
 
   let bird_dy = 0;
+  let pipe_seperation = 0;
+  const pipe_gap = 31;
+
+  // -------------------------
+  // SAUT
+  // -------------------------
 
   function jump() {
+
     if (game_state === 'Play') {
       bird_dy = -12.6;
     }
   }
 
-  async function apply_gravity() {
-    if (game_state != 'Play') return;
+  // -------------------------
+  // CONTROLES
+  // -------------------------
 
-    bird_dy = bird_dy + gravity;
+  function keyJump(e) {
 
-    document.addEventListener('keydown', (e) => {
-      if (e.key == 'ArrowUp' || e.key == ' ') {
-        jump();
-      }
-    });
-
-    document.addEventListener('touchend', (e) => {
-      const targetTag = e.target.tagName.toLowerCase();
-      if (
-        ['input', 'button', 'label', 'select', 'textarea'].includes(targetTag)
-      ) {
-        return; // 입력 중엔 점프 금지
-      }
-
+    if (
+      e.key === 'ArrowUp' ||
+      e.key === ' '
+    ) {
       jump();
-    });
+    }
+  }
 
-    // 새와 창 상단 또는 하단의 충돌 감지
-    if (bird_props.top <= 0 || bird_props.bottom >= background.bottom) {
-      game_state = 'End';
-      message2.innerHTML = 'GAME OVER <br/> PRESS ENTER';
-      endGame(score_val.innerHTML);
+  function touchJump(e) {
 
-      // 게임 플레이 횟수 -1
-      const userRef = ref(db, 'users/' + globalStudentId);
-      const snapshot = await get(userRef);
-      if (snapshot.exists()) {
-        const userData = snapshot.val();
-        // 업데이트된 최고 점수와 게임 플레이 수 저장
-        await update(userRef, {
-          gamesPlayed: userData.gamesPlayed - 0.5,
-        });
-        console.log('게임플레이횟수 -1 성공');
-      } else {
-        console.error('사용자 데이터를 찾을 수 없습니다.');
-      }
-      globalGamesPlay -= 0.5;
+    const targetTag =
+      e.target.tagName.toLowerCase();
 
-      // message.style.left = '26vw';
-      bird_props = bird.getBoundingClientRect();
+    if (
+      [
+        'input',
+        'button',
+        'label',
+        'select',
+        'textarea'
+      ].includes(targetTag)
+    ) {
       return;
     }
 
-    bird.style.top = bird_props.top + bird_dy + 'px';
-    bird_props = bird.getBoundingClientRect();
-    requestAnimationFrame(apply_gravity);
+    jump();
   }
-  requestAnimationFrame(apply_gravity);
 
-  let pipe_seperation = 0;
+  document.addEventListener(
+    'keydown',
+    keyJump
+  );
 
-  // 두 파이프 사이의 간격에 대한 상수 값
-  let pipe_gap = 31;
+  document.addEventListener(
+    'touchend',
+    touchJump
+  );
 
-  function create_pipe() {
-    if (game_state != 'Play') return;
+  document.addEventListener(
+    'pointerdown',
+    touchJump
+  );
 
-    // move_speed에 따라 파이프 생성 주기를 조정
-    if (pipe_seperation > 100 - (move_speed - 5) * 6) {
+  // -------------------------
+  // MOUVEMENT PIPES
+  // -------------------------
+
+  function move() {
+
+    if (game_state !== 'Play') {
+      return;
+    }
+
+    const pipeSprites =
+      document.querySelectorAll(
+        '.pipe_sprite'
+      );
+
+    pipeSprites.forEach(
+      element => {
+
+        const pipeProps =
+          element.getBoundingClientRect();
+
+        bird_props =
+          bird.getBoundingClientRect();
+
+        if (pipeProps.right <= 0) {
+
+          element.remove();
+
+        } else {
+
+          const collision =
+            bird_props.left <
+              pipeProps.left +
+              pipeProps.width &&
+            bird_props.left +
+              bird_props.width >
+              pipeProps.left &&
+            bird_props.top <
+              pipeProps.top +
+              pipeProps.height &&
+            bird_props.top +
+              bird_props.height >
+              pipeProps.top;
+
+          if (collision) {
+
+            game_state = 'End';
+
+            message2.innerHTML =
+              `GAME OVER<br>Score : ${score_val.innerHTML}<br>`;
+
+            endGame(
+              score_val.innerHTML
+            );
+
+            setTimeout(() => {
+
+              message2.innerHTML +=
+                gamesPlayed < MAX_GAMES
+                  ? 'APPUIE SUR ENTRÉE OU JOUER POUR REJOUER'
+                  : 'APPUIE SUR ENTRÉE POUR VOIR LE CLASSEMENT';
+
+            }, 300);
+
+            return;
+          }
+
+          if (
+            pipeProps.right <
+              bird_props.left &&
+            pipeProps.right +
+              move_speed >=
+              bird_props.left &&
+            element.increase_score === '1'
+          ) {
+
+            score_val.innerHTML =
+              Number(
+                score_val.innerHTML
+              ) + 1;
+
+            const audio =
+              new Audio(
+                '/sound/Coin.mp3'
+              );
+
+            audio
+              .play()
+              .catch(() => {});
+
+            const score =
+              Number(
+                score_val.innerHTML
+              );
+
+            if (score > 20) {
+
+              document
+                .querySelector(
+                  '.background'
+                )
+                .style
+                .backgroundImage =
+                  "url('/img/background2.jpg')";
+
+              move_speed = 7;
+              gravity = 0.75;
+            }
+
+            if (score > 40) {
+
+              document
+                .querySelector(
+                  '.background'
+                )
+                .style
+                .backgroundImage =
+                  "url('/img/background3.png')";
+
+              move_speed = 10;
+              gravity = 0.9;
+            }
+
+            if (score > 60) {
+
+              document
+                .querySelector(
+                  '.background'
+                )
+                .style
+                .backgroundImage =
+                  "url('/img/background4.jpg')";
+
+              move_speed = 15;
+              gravity = 1.2;
+            }
+          }
+
+          element.style.left =
+            pipeProps.left -
+            move_speed +
+            'px';
+        }
+      }
+    );
+
+    requestAnimationFrame(move);
+  }
+
+  // -------------------------
+  // GRAVITE
+  // -------------------------
+
+  function applyGravity() {
+
+    if (game_state !== 'Play') {
+      return;
+    }
+
+    bird_dy += gravity;
+
+    bird.style.top =
+      bird_props.top +
+      bird_dy +
+      'px';
+
+    bird_props =
+      bird.getBoundingClientRect();
+
+    if (
+      bird_props.top <= 0 ||
+      bird_props.bottom >=
+        background.bottom
+    ) {
+
+      game_state = 'End';
+
+      message2.innerHTML =
+        `GAME OVER<br>Score : ${score_val.innerHTML}<br>`;
+
+      endGame(
+        score_val.innerHTML
+      );
+
+      return;
+    }
+
+    requestAnimationFrame(
+      applyGravity
+    );
+  }
+
+  // -------------------------
+  // CREATION PIPES
+  // -------------------------
+
+  function createPipe() {
+
+    if (game_state !== 'Play') {
+      return;
+    }
+
+    if (
+      pipe_seperation >
+      100 -
+      (move_speed - 5) * 6
+    ) {
+
       pipe_seperation = 0;
 
-      // 파이프의 Y축 위치를 무작위로 계산
-      let pipe_posi = Math.floor(Math.random() * 60) + 8;
+      const pipePosition =
+        Math.floor(
+          Math.random() * 60
+        ) + 8;
 
-      // 위쪽 파이프 생성
-      let pipe_sprite_inv = document.createElement('div');
-      pipe_sprite_inv.className = 'pipe_sprite pipe_sprite_top'; // 위쪽 파이프에 특정 클래스 추가
-      pipe_sprite_inv.style.top = pipe_posi - 70 + 'vh';
-      pipe_sprite_inv.style.left = '100vw';
-      document.body.appendChild(pipe_sprite_inv);
+      const pipeTop =
+        document.createElement(
+          'div'
+        );
 
-      // 아래쪽 파이프 생성
-      let pipe_sprite = document.createElement('div');
-      pipe_sprite.className = 'pipe_sprite pipe_sprite_bottom'; // 아래쪽 파이프에 특정 클래스 추가
-      pipe_sprite.style.top = pipe_posi + pipe_gap + 'vh';
-      pipe_sprite.style.left = '100vw';
-      pipe_sprite.increase_score = '1';
-      document.body.appendChild(pipe_sprite);
+      pipeTop.className =
+        'pipe_sprite pipe_sprite_top';
+
+      pipeTop.style.top =
+        pipePosition -
+        70 +
+        'vh';
+
+      pipeTop.style.left =
+        '100vw';
+
+      document.body.appendChild(
+        pipeTop
+      );
+
+      const pipeBottom =
+        document.createElement(
+          'div'
+        );
+
+      pipeBottom.className =
+        'pipe_sprite pipe_sprite_bottom';
+
+      pipeBottom.style.top =
+        pipePosition +
+        pipe_gap +
+        'vh';
+
+      pipeBottom.style.left =
+        '100vw';
+
+      pipeBottom.increase_score =
+        '1';
+
+      document.body.appendChild(
+        pipeBottom
+      );
     }
+
     pipe_seperation++;
-    requestAnimationFrame(create_pipe);
+
+    requestAnimationFrame(
+      createPipe
+    );
   }
 
-  requestAnimationFrame(create_pipe);
+  requestAnimationFrame(move);
+  requestAnimationFrame(applyGravity);
+  requestAnimationFrame(createPipe);
 }
