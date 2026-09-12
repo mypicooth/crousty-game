@@ -80,9 +80,11 @@ flappy: {
 }
 ```
 
-Un `title` d'accueil vide affiche le nom du jeu. Un fond de palier vide reprend le fond du
-palier précédent (ou `/img/background.jpg` pour le premier). Un personnage vide reprend
-`/img/logo.png`.
+Un `title` d'accueil vide affiche le nom du jeu. Un fond de palier vide reprend le dernier
+fond personnalisé d'un palier précédent ; s'il n'y en a aucun, il utilise le fond par défaut
+de son rang (`/img/background.jpg`, `background2.jpg`, `background3.png`, `background4.jpg`),
+ce qui conserve le rendu actuel du jeu Crousty et celui des jeux existants (dont le fond
+unique s'appliquait à tous les paliers). Un personnage vide reprend `/img/logo.png`.
 
 ### 3.2 Validation (`normalizeFlappy`)
 
@@ -141,7 +143,7 @@ inconnu → erreur 400.
 | `main.js` | Point d'entrée. `?game=ID` → backend géré ; `?preview=1` → backend aperçu ; sinon → backend Crousty historique. Appelle `createFlappyGame(config, backend)`. |
 | `legacy-crousty.mjs` | Backend Firebase direct de `campaigns/crousty_2026` (code actuel extrait tel quel). Config = `FLAPPY_DEFAULTS` + textes Crousty actuels. |
 | `managed-game.mjs` | Backend `/api/game` (existant), sans manipulation du DOM. |
-| `game/flappy/preview.mjs` | Backend simulé : parties illimitées, meilleur score en mémoire, classement factice de 10 noms. Reçoit `postMessage` `{ type: 'flappy:config', config }` et `{ type: 'flappy:goto', screen }` ; vérifie `event.origin` (voir 4.3). Affiche un bandeau « APERÇU — parties illimitées, scores non enregistrés ». |
+| `game/flappy/preview.mjs` | Backend simulé : parties illimitées, meilleur score en mémoire, classement factice. Reçoit `postMessage` `{ type: 'flappy:config', game }` et `{ type: 'flappy:goto', screen }` ; n'accepte que `event.origin === location.origin` (voir 4.3). Affiche un bandeau « APERÇU — parties illimitées, scores non enregistrés ». |
 | `game/flappy/theme.mjs` | `apply(config, vars)` idempotent : textes (`data-text`), CSS vars `--fb-*`, police (Google Font chargée à la demande, `pixel` = `/font/flappy-bird-font`), images, formulaire généré (champs fixes + libres). |
 | `game/flappy/engine.mjs` | `startRun({ physics, stages, character, obstacles }, { onScore, onStageChange, onEnd }, dom)` : boucle à pas fixe (`game-loop.mjs`), palier courant, saut, spawn, collisions avec `hitboxScale`, rotation. Pas de texte, pas de réseau ; le DOM est injecté pour rester testable. |
 | `game/flappy/screens.mjs` | Machine d'états `welcome → countdown → play → gameOver → ranking`. Lecture/validation du formulaire, appels backend, rendu du classement (places, `nameFormat`, rang du joueur, CTA). |
@@ -165,12 +167,12 @@ Interface backend commune : `{ register(player), start(), finish(score), leaderb
 ### 4.3 Mode aperçu
 
 - L'admin charge `/index.html?preview=1` dans l'iframe (même origine : le rewrite
-  `/ → /admin/index.html` ne s'applique qu'au chemin `/`). Aucune écriture réelle.
-- Origines autorisées pour `postMessage` : `location.origin` de l'iframe, plus
-  `PUBLIC_ADMIN_ORIGIN` si défini. Cette valeur est exposée au jeu via
-  `/api/game?action=origins` (GET public, renvoie `{ adminOrigin }`), consultée uniquement
-  en mode aperçu. En pratique l'iframe est toujours même-origine ; le cross-origin sert au
-  bouton « Ouvrir en grand » depuis `admin.myicbooth.com` vers le domaine public.
+  `/ → /admin/index.html` ne s'applique qu'au chemin `/`, et l'admin est déployé dans le
+  même projet Vercel que le jeu). Aucune écriture réelle.
+- « Ouvrir en grand » ouvre la même URL sur l'origine de l'admin, dans un nouvel onglet
+  (avec `opener` conservé) ; la page envoie `{ type: 'flappy:ready' }` à son `opener` ou
+  `parent`, et l'admin lui pousse ensuite la config. Seule `location.origin` est acceptée
+  des deux côtés : aucune configuration cross-origin n'est nécessaire.
 - L'admin envoie la config normalisée à chaque `input` (debounce 150 ms). Si la
   normalisation échoue, la dernière config valide reste affichée et l'erreur est montrée
   sous le champ.
@@ -226,7 +228,6 @@ Comportements :
 ### 6.1 `api/game.js`
 
 - `GET config` : jeu migré + normalisé, filtré par `publicGame`.
-- `GET origins` : `{ adminOrigin }` (voir 4.3).
 - `POST register` : validation selon `flappy.form` — champs fixes requis si
   `visible && required`, ignorés si masqués (stockés `''`) ; email toujours requis ;
   champs libres typés (`text` ≤ 200, `select` ∈ options, `checkbox` booléen), requis si
@@ -249,8 +250,7 @@ Comportements :
 
 - `participantCsv(players, game)` : une colonne par champ libre (en-tête = `label`) après
   « Téléphone » ; `checkbox` → Oui/Non.
-- `.env.example` : `PUBLIC_ADMIN_ORIGIN=` (facultatif).
-- Règles Firebase / Storage / `vercel.json` : inchangés.
+- Règles Firebase / Storage / `vercel.json` / `.env.example` : inchangés.
 
 ## 7. Tests
 
@@ -258,7 +258,7 @@ Comportements :
   `migrateLegacyGame` sur des fixtures au format actuel, `renderText`.
 - `tests/studio.test.mjs` (étendu) : `register` avec champs masqués / facultatifs / libres
   valides et invalides, champ inconnu rejeté, CSV avec colonnes libres, `leaderboard`
-  (`places`, `nameFormat`, `showOwnRank`, entrées anciennes), `config` migré, `origins`.
+  (`places`, `nameFormat`, `showOwnRank`, entrées anciennes), `config` migré.
 - `tests/engine.test.mjs` : moteur sans DOM réel (fabrique injectée) — gravité/vitesse du
   palier courant, changement de palier au bon score, saut, collision avec `hitboxScale`,
   `spawnEvery`.
@@ -275,4 +275,5 @@ screens,preview}.mjs`, `legacy-crousty.mjs`, `tests/flappy-config.test.mjs`,
 `tests/engine.test.mjs`.
 Modifiés : `main.js`, `managed-game.mjs`, `index.html`, `style.css`, `shared/game-config.mjs`,
 `api/game.js`, `api/admin.js`, `admin/index.html`, `admin/studio.js`, `admin/studio.css`,
-`scripts/build.cjs` (copie `game/`), `tests/*`, `.env.example`, `ADMIN_SETUP.md`.
+`scripts/build.cjs` et `scripts/dev.cjs` (servent `game/` et `legacy-crousty.mjs`), `tests/*`,
+`ADMIN_SETUP.md`.
