@@ -81,6 +81,9 @@ test('renderText, formatName, stageBackground, getPath/setPath', () => {
   assert.equal(formatName('Camille', 'Test', 'first'), 'Camille');
   assert.equal(formatName('Camille', 'Test', 'full'), 'Camille Test');
   assert.equal(formatName('Camille', '', 'firstInitial'), 'Camille');
+  assert.equal(formatName('', 'Dupont', 'firstInitial'), 'D.');
+  assert.equal(formatName('', 'Dupont', 'full'), 'Dupont');
+  assert.equal(formatName('', '', 'first'), 'Joueur');
   const stages = normalizeFlappy().stages;
   assert.deepEqual(stages.map((_, i) => stageBackground(stages, i)), DEFAULT_BACKGROUNDS);
   const custom = normalizeFlappy({ stages: [{ minScore: 0, backgroundUrl: 'https://a.example/1.jpg' }, { minScore: 10 }, { minScore: 20, backgroundUrl: 'https://a.example/3.jpg' }] }).stages;

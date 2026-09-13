@@ -28,7 +28,9 @@ export function loadLegacyGame() {
   const campaign = {
     id: CAMPAIGN_ID, type: 'flappy', name: 'CROUSTY GAME', company: 'Crousty', maxGames: 3, countdownSeconds: 3, termsUrl: '', privacyUrl: '',
     marketingLabel: "J'accepte de recevoir les offres et actualités de Crousty.",
-    flappy: normalizeFlappy({ character: { rotateOnJump: false, hitboxScale: 100 }, screens: { welcome: { title: 'CROUSTY GAME' }, ranking: { title: '🏆 TOP 10 CROUSTY' } }, leaderboard: { showOwnRank: false } })
+    flappy: normalizeFlappy({ character: { rotateOnJump: false, hitboxScale: 100 }, screens: { welcome: { title: 'CROUSTY GAME' }, ranking: { title: '🏆 TOP 10 CROUSTY' } }, leaderboard: { showOwnRank: false },
+      // L’original changeait de palier à score > 20/40/60.
+      stages: [{ minScore: 0 }, { minScore: 21 }, { minScore: 41 }, { minScore: 61 }] })
   };
   return { campaign, backend: {
     async register(player) {

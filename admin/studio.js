@@ -10,7 +10,7 @@ const auth = getAuth(app);
 const $ = id => document.getElementById(id);
 const form = $('gameForm');
 let games = [], current = null, participants = [], emailReady = false, gameOrigin = 'https://crousty-game.vercel.app';
-let dirty = false, activeTab = 'general', activeType = '', loading = false, uploadCount = 0, uploadSeq = 0, authGeneration = 0, previewTimer;
+let dirty = false, activeType = '', loading = false, uploadCount = 0, uploadSeq = 0, authGeneration = 0, previewTimer;
 const editorState = { stages: [], customFields: [] };
 const previewTargets = new Set();
 
@@ -92,7 +92,7 @@ function renderGames() {
   for (const game of filtered) {
     const type = typeOf(game); const f = game.flappy || {};
     const article = document.createElement('article'); article.className = 'game-card';
-    article.innerHTML = `<div class="card-cover"><span class="badge ${escapeHtml(game.status)}">${({ draft: 'BROUILLON', published: 'EN LIGNE', paused: 'EN PAUSE' })[game.status] || 'BROUILLON'}</span><span class="badge type">${escapeHtml(type?.label || game.type || '')}</span><img alt=""></div><div class="card-body"><h3>${escapeHtml(game.name)}</h3><p>${escapeHtml(game.company || 'Société à compléter')} · ${escapeHtml(type?.label || '')}</p><div class="card-footer"><span>${game.maxGames} parties / email</span><button>Gérer le jeu →</button></div></div>`;
+    article.innerHTML = `<div class="card-cover"><span class="badge ${escapeHtml(game.status)}">${({ draft: 'BROUILLON', published: 'EN LIGNE', paused: 'EN PAUSE' })[game.status] || 'BROUILLON'}</span><span class="badge type">${escapeHtml(type?.label || game.type || '')}</span><img alt=""></div><div class="card-body"><h3>${escapeHtml(game.name)}</h3><p>${escapeHtml(game.company || 'Société à compléter')} · ${escapeHtml(type?.label || '')}</p><div class="card-footer"><span>${escapeHtml(game.maxGames)} parties / email</span><button>Gérer le jeu →</button></div></div>`;
     const cover = article.querySelector('.card-cover'); cover.style.backgroundColor = f.brand?.accent || '#e3eccb';
     const background = f.stages?.[0]?.backgroundUrl; if (background) cover.style.backgroundImage = cssUrl(background);
     article.querySelector('img').src = f.character?.imageUrl || '/img/logo.png';
@@ -357,7 +357,6 @@ $('duplicateGame').addEventListener('click', async () => {
   catch (error) { status(error.message, true); }
 });
 function selectTab(tab) {
-  activeTab = tab;
   document.querySelectorAll('[data-tab]').forEach(button => button.classList.toggle('active', button.dataset.tab === tab));
   document.querySelectorAll('[data-panel]').forEach(panel => panel.hidden = panel.dataset.panel !== tab);
   if (tab === 'data') loadParticipants();
@@ -383,7 +382,7 @@ function renderParticipants() {
   for (const p of list) {
     const row = document.createElement('tr');
     const extra = custom.map(f => `<td>${escapeHtml(f.type === 'checkbox' ? (p.extra?.[f.id] ? 'Oui' : 'Non') : (p.extra?.[f.id] ?? ''))}</td>`).join('');
-    row.innerHTML = `<td><strong>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</strong><small>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : ''}</small></td><td>${escapeHtml(p.email)}<small>${escapeHtml(p.phone)}</small></td>${extra}<td>${p.gamesPlayed}</td><td>${p.highScore}</td><td>${p.consentMarketing ? 'Oui' : 'Non'}</td><td></td>`;
+    row.innerHTML = `<td><strong>${escapeHtml(p.firstName)} ${escapeHtml(p.lastName)}</strong><small>${p.createdAt ? new Date(p.createdAt).toLocaleDateString('fr-FR') : ''}</small></td><td>${escapeHtml(p.email)}<small>${escapeHtml(p.phone)}</small></td>${extra}<td>${escapeHtml(p.gamesPlayed)}</td><td>${escapeHtml(p.highScore)}</td><td>${p.consentMarketing ? 'Oui' : 'Non'}</td><td></td>`;
     if (current.id !== 'crousty_2026') {
       const button = document.createElement('button'); button.textContent = 'Supprimer';
       button.addEventListener('click', async () => {

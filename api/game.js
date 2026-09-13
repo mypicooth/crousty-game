@@ -20,7 +20,7 @@ module.exports = async function handler(req, res) {
       const { places, nameFormat, showOwnRank } = game.flappy.leaderboard;
       const data = (await db.ref(`studio/leaderboards/${id}`).get()).val() || {};
       const entries = Object.entries(data)
-        .map(([pid, p]) => ({ pid, displayName: p.firstName ? formatName(p.firstName, p.lastName, nameFormat) : String(p.displayName || ''), highScore: Number(p.highScore) || 0 }))
+        .map(([pid, p]) => ({ pid, displayName: (p.firstName || p.lastName) ? formatName(p.firstName, p.lastName, nameFormat) : String(p.displayName || ''), highScore: Number(p.highScore) || 0 }))
         .sort((a, b) => b.highScore - a.highScore);
       const players = entries.slice(0, places).map(({ displayName, highScore }) => ({ displayName, highScore }));
       let me;

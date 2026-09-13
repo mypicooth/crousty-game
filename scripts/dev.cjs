@@ -4,7 +4,7 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const port = Number(process.env.PORT || 3000);
 const publicPaths = new Set(['index.html', 'main.js', 'style.css', 'game-loop.mjs', 'managed-game.mjs', 'legacy-crousty.mjs', 'game', 'img', 'font', 'sound', 'admin', 'shared']);
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp3': 'audio/mpeg' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp3': 'audio/mpeg', '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.otf': 'font/otf' };
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
   if (['/api/admin', '/api/game', '/api/assets'].includes(url.pathname)) {

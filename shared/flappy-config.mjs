@@ -143,9 +143,12 @@ export function renderText(template, vars = {}) {
 }
 export function formatName(firstName, lastName, format) {
   const first = String(firstName || '').trim(); const last = String(lastName || '').trim();
-  if (format === 'full') return [first, last].filter(Boolean).join(' ');
-  if (format === 'first' || !last) return first;
-  return `${first} ${last.charAt(0).toUpperCase()}.`;
+  let result;
+  if (format === 'full') result = [first, last].filter(Boolean).join(' ');
+  else if (format === 'first' || !last) result = first;
+  else result = `${first} ${last.charAt(0).toUpperCase()}.`;
+  result = result.trim();
+  return result || 'Joueur';
 }
 export function stageBackground(stages, index) {
   for (let i = Math.min(index, stages.length - 1); i >= 0; i--) if (stages[i].backgroundUrl) return stages[i].backgroundUrl;

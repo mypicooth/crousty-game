@@ -21,7 +21,7 @@ module.exports = async function handler(req, res) {
       const players = (await db.ref(path).get()).val() || {};
       const legacyScores = id === 'crousty_2026' ? (await db.ref('campaigns/crousty_2026/leaderboard').get()).val() || {} : {};
       // Explicit projection keeps session/run/internal fields out of admin responses.
-      const participants = Object.entries(players).map(([id, p]) => ({ id, firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone, extra: p.extra || {}, gamesPlayed: p.gamesPlayed || 0, highScore: p.highScore ?? legacyScores[id]?.highScore ?? 0, consentMarketing: !!p.consentMarketing, consentGame: !!p.consentGame, consentTimestamp: p.consentTimestamp || p.createdAt, createdAt: p.createdAt }));
+      const participants = Object.entries(players).map(([id, p]) => ({ id, firstName: p.firstName, lastName: p.lastName, email: p.email, phone: p.phone, extra: p.extra || {}, gamesPlayed: Number(p.gamesPlayed) || 0, highScore: Number(p.highScore ?? legacyScores[id]?.highScore) || 0, consentMarketing: !!p.consentMarketing, consentGame: !!p.consentGame, consentTimestamp: p.consentTimestamp || p.createdAt, createdAt: p.createdAt }));
       participants.sort((a, b) => b.createdAt - a.createdAt);
       return send(res, 200, { participants });
     }

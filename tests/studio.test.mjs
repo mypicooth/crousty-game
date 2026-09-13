@@ -171,6 +171,9 @@ test('leaderboard honours places, name format and own rank; legacy entries keep 
   assert.equal((await call(game, { query: { id: 'board', action: 'leaderboard' } })).players[1].displayName, 'Camille');
   await db.ref('studio/games/board/flappy/leaderboard/showOwnRank').set(false);
   assert.equal((await call(game, { token: tokens[0], query: { id: 'board', action: 'leaderboard' } })).me, undefined);
+  await db.ref('studio/leaderboards/board/noname').set({ firstName: '', lastName: 'Dupont', highScore: 40 });
+  const { players } = await call(game, { query: { id: 'board', action: 'leaderboard' } });
+  assert.ok(players.some(p => p.displayName === 'Joueur' && p.highScore === 40));
 });
 
 test('admin reads migrate flat games and saves drop the legacy keys', async () => {
