@@ -67,5 +67,5 @@ export function participantCsv(players, game) {
     ...custom.map(f => f.type === 'checkbox' ? (p.extra?.[f.id] ? 'Oui' : 'Non') : (p.extra?.[f.id] ?? '')),
     p.gamesPlayed, p.highScore, p.consentMarketing ? 'Oui' : 'Non', p.consentGame ? 'Oui' : 'Non', p.consentTimestamp ? new Date(p.consentTimestamp).toISOString() : ''
   ]);
-  return '﻿' + rows.map(row => row.map(csvCell).join(';')).join('\r\n');
+  return '\uFEFF' + rows.map(row => row.map(csvCell).join(';')).join('\r\n');
 }

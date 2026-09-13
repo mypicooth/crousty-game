@@ -64,7 +64,8 @@ test('campaign normalization delegates the flappy block to the game type and mig
   const game = normalizeGame({ ...published, flappy: { physics: { preset: 'custom', gap: 40 }, form: { customFields: [{ label: 'Magasin', type: 'select', options: ['Paris'] }] } } });
   assert.equal(game.type, 'flappy'); assert.equal(game.flappy.physics.gap, 40); assert.equal(game.flappy.form.customFields[0].id, 'magasin');
   assert.equal(game.subtitle, undefined);
-  const legacy = normalizeGame({ ...published, birdUrl: 'https://a.example/bird.png', difficulty: 'easy', accent: '#112233' });
+  const { flappy: _defaults, ...flat } = published;
+  const legacy = normalizeGame({ ...flat, birdUrl: 'https://a.example/bird.png', difficulty: 'easy', accent: '#112233' });
   assert.equal(legacy.birdUrl, undefined); assert.equal(legacy.flappy.character.imageUrl, 'https://a.example/bird.png'); assert.equal(legacy.flappy.physics.preset, 'easy'); assert.equal(legacy.flappy.brand.accent, '#112233');
   assert.throws(() => normalizeGame({ ...published, type: 'tetris' }), /Type de jeu inconnu/);
   assert.throws(() => normalizeGame({ ...published, flappy: { leaderboard: { places: 1 } } }), e => e.path === 'flappy.leaderboard.places');
