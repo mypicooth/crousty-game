@@ -2,146 +2,51 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Crousty Game</title>
-
   <link rel="stylesheet" href="style.css">
-
   <script defer type="module" src="main.js"></script>
 </head>
-
 <body>
-
-  <!-- FOND -->
+  <div id="previewBanner" class="preview-banner" hidden>APERÇU — parties illimitées, scores non enregistrés</div>
   <div class="background"></div>
+  <img class="bird" src="/img/logo.png" alt="">
 
-  <!-- PERSONNAGE -->
-  <img
-    class="bird"
-    src="/img/logo.png"
-    alt="Crousty Game"
-  >
-
-  <!-- ACCUEIL -->
   <div class="message" id="welcomeScreen">
-
-    <div class="game-logo">
-      CROUSTY GAME
-    </div>
-
-    <div class="game-subtitle">
-      Fais le meilleur score !
-    </div>
-
+    <div class="game-logo"><span data-text="welcome.title">CROUSTY GAME</span></div>
+    <div class="game-subtitle" data-text="welcome.subtitle">Fais le meilleur score !</div>
     <div class="user-info">
-
-      <input
-        type="text"
-        id="firstName"
-        placeholder="Prénom *"
-        autocomplete="given-name"
-        required
-      >
-
-      <input
-        type="text"
-        id="lastName"
-        placeholder="Nom *"
-        autocomplete="family-name"
-        required
-      >
-
-      <input
-        type="email"
-        id="email"
-        placeholder="E-mail *"
-        autocomplete="email"
-        required
-      >
-
-      <input
-        type="tel"
-        id="phone"
-        placeholder="Téléphone *"
-        autocomplete="tel"
-        required
-      >
-
-      <label class="consent-line">
-        <input
-          type="checkbox"
-          id="consentGame"
-        >
-
-        <span id="gameConsentText">
-          J'accepte le règlement du jeu et la politique de confidentialité.
-        </span>
-      </label>
-
-      <label class="consent-line">
-        <input
-          type="checkbox"
-          id="consentMarketing"
-        >
-
-        <span id="marketingText">
-          J'accepte de recevoir les offres et actualités de Crousty.
-        </span>
-      </label>
-
+      <div id="formFields"></div>
+      <label class="consent-line"><input type="checkbox" id="consentGame"><span id="gameConsentText">J'accepte le règlement du jeu et la politique de confidentialité.</span></label>
+      <label class="consent-line"><input type="checkbox" id="consentMarketing"><span id="marketingText">J'accepte de recevoir les offres et actualités de Crousty.</span></label>
     </div>
-
-    <button id="loginBtn">
-      JOUER
-    </button>
-
-    <div class="game-info">
-      3 parties pour réaliser ton meilleur score
-    </div>
-
+    <button id="loginBtn" data-text="welcome.button">JOUER</button>
+    <div class="game-info" data-text="welcome.info">3 parties pour réaliser ton meilleur score</div>
   </div>
 
-  <!-- GAME OVER -->
   <div class="message2"></div>
 
   <div id="countdown" class="countdown" hidden>
     <div class="countdown-panel">
-      <p>PRÊT ?</p>
+      <p data-text="countdown.title">PRÊT ?</p>
       <strong id="countdownValue" role="status" aria-live="polite">3</strong>
-      <p>Touche l’écran pour voler<br><small>Sur ordinateur : espace ou flèche ↑</small></p>
+      <p><span data-text="countdown.hint">Touche l’écran pour voler</span><br><small data-text="countdown.hintDesktop">Sur ordinateur : espace ou flèche ↑</small></p>
     </div>
   </div>
 
-  <!-- BOUTON REJOUER -->
-  <button
-    id="replayBtn"
-    class="replay-btn"
-  >
-    REJOUER
-  </button>
+  <button id="replayBtn" class="replay-btn">REJOUER</button>
 
-  <!-- SCORE / CLASSEMENT -->
-  <div class="score">
-
-    <span class="score_title"></span>
-
-    <span class="score_val"></span>
-
-  </div>
+  <div class="score"><span class="score_title"></span><span class="score_val"></span></div>
 
   <section id="rankingScreen" class="ranking-screen" aria-labelledby="rankingTitle" hidden>
-    <h1 id="rankingTitle" tabindex="-1">🏆 TOP 10 CROUSTY</h1>
+    <h1 id="rankingTitle" tabindex="-1" data-text="ranking.title">🏆 TOP 10 CROUSTY</h1>
     <p id="bestScore" class="best-score"></p>
-    <p class="ranking-caption">Tes 3 parties sont terminées. Merci d’avoir joué !</p>
-    <ul class="ranking" aria-label="Les dix meilleurs scores"></ul>
+    <p id="ownRank" class="own-rank" hidden></p>
+    <p class="ranking-caption" data-text="ranking.caption">Tes 3 parties sont terminées. Merci d’avoir joué !</p>
+    <ul class="ranking" aria-label="Les meilleurs scores"></ul>
     <p id="rankingStatus" role="status"></p>
     <button id="rankingRetry" type="button" hidden>RÉESSAYER</button>
+    <a id="rankingCta" class="ranking-cta" target="_blank" rel="noopener noreferrer" hidden></a>
   </section>
-
 </body>
 </html>
