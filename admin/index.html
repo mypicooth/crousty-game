@@ -69,25 +69,25 @@
           <div class="editor-main">
             <form id="gameForm">
               <section class="editor-panel" data-panel="general"><span class="eyebrow">LE POINT DE DÉPART</span><h2>Une marque, une expérience.</h2><p class="panel-intro">Les informations qui donneront vie à votre campagne.</p>
-                <div class="field-grid"><label>Nom du jeu<input name="name" required maxlength="200" placeholder="Ex. L'envol Crousty"></label><label>Société organisatrice<input name="company" maxlength="200" placeholder="Ex. Crousty"></label></div>
+                <div class="field-grid"><label>Nom du jeu<input name="name" required maxlength="200" placeholder="Ex. L’envol Crousty"></label><label>Société organisatrice<input name="company" maxlength="200" placeholder="Ex. Crousty"></label></div>
                 <div class="field-grid"><label>Début de campagne<input name="startsAt" type="datetime-local"></label><label>Fin de campagne<input name="endsAt" type="datetime-local"></label></div>
-                <label>État de la campagne<select name="status"><option value="draft">Brouillon — visible dans l'administration</option><option value="published">Publié — accessible aux participants</option><option value="paused">En pause — nouvelles parties fermées</option></select></label>
+                <label>État de la campagne<select name="status"><option value="draft">Brouillon — visible dans l’administration</option><option value="published">Publié — accessible aux participants</option><option value="paused">En pause — nouvelles parties fermées</option></select></label>
                 <div class="info-box">Avant publication, ajoutez le règlement et la politique de confidentialité de la société dans la section Règles.</div>
               </section>
 
               <section class="editor-panel" data-panel="brand" hidden><span class="eyebrow">VOTRE IDENTITÉ</span><h2>Marque & thème.</h2><p class="panel-intro">Logo, couleurs et typographie appliqués à tous les écrans du jeu.</p>
                 <div class="upload-grid" id="brandUploads"></div>
-                <div class="field-grid"><label>Couleur d'accent<input name="flappy.brand.accent" type="color"></label><label>Police<select name="flappy.theme.font" id="fontSelect"></select></label></div>
-                <h3>Panneau d'accueil</h3><div class="field-grid"><label>Fond du panneau<input name="flappy.theme.panelBg" type="color"></label><label>Texte du panneau<input name="flappy.theme.panelText" type="color"></label></div>
+                <div class="field-grid"><label>Couleur d’accent<input name="flappy.brand.accent" type="color"></label><label>Police<select name="flappy.theme.font" id="fontSelect"></select></label></div>
+                <h3>Panneau d’accueil</h3><div class="field-grid"><label>Fond du panneau<input name="flappy.theme.panelBg" type="color"></label><label>Texte du panneau<input name="flappy.theme.panelText" type="color"></label></div>
                 <h3>Boutons</h3><div class="field-grid"><label>Fond des boutons<input name="flappy.theme.buttonBg" type="color"></label><label>Texte des boutons<input name="flappy.theme.buttonText" type="color"></label></div>
                 <h3>Score et classement</h3><div class="field-grid"><label>Couleur du score en jeu<input name="flappy.theme.hudText" type="color"></label><label>Voile du classement<input name="flappy.theme.overlayColor" type="color"></label></div>
                 <label>Opacité du voile (%)<input name="flappy.theme.overlayOpacity" type="range" min="0" max="100" step="1"><output data-output="flappy.theme.overlayOpacity"></output></label>
                 <button type="button" class="link-button reset-section" data-reset="brand">Réinitialiser cette section</button>
               </section>
 
-              <section class="editor-panel" data-panel="welcome" hidden><span class="eyebrow">PREMIER CONTACT</span><h2>Accueil & formulaire.</h2><p class="panel-intro">Ce que le participant lit avant de jouer, et ce qu'il vous confie.</p>
+              <section class="editor-panel" data-panel="welcome" hidden><span class="eyebrow">PREMIER CONTACT</span><h2>Accueil & formulaire.</h2><p class="panel-intro">Ce que le participant lit avant de jouer, et ce qu’il vous confie.</p>
                 <label>Titre (vide : le nom du jeu)<input name="flappy.screens.welcome.title" maxlength="200"></label>
-                <label>Message d'accueil<input name="flappy.screens.welcome.subtitle" maxlength="200"></label>
+                <label>Message d’accueil<input name="flappy.screens.welcome.subtitle" maxlength="200"></label>
                 <div class="field-grid"><label>Bouton<input name="flappy.screens.welcome.button" maxlength="200"></label><label>Texte sous le bouton<input name="flappy.screens.welcome.info" maxlength="200"></label></div>
                 <p class="field-help">Variables : <code>{{jeu}}</code>, <code>{{société}}</code>, <code>{{parties}}</code>.</p>
                 <h3>Champs du formulaire</h3>
@@ -97,11 +97,11 @@
                   <tr><td>E-mail</td><td><input type="checkbox" name="flappy.form.fields.email.visible" checked disabled></td><td><input type="checkbox" name="flappy.form.fields.email.required" checked disabled></td><td><input name="flappy.form.fields.email.label" maxlength="80"></td></tr>
                   <tr><td>Téléphone</td><td><input type="checkbox" name="flappy.form.fields.phone.visible"></td><td><input type="checkbox" name="flappy.form.fields.phone.required"></td><td><input name="flappy.form.fields.phone.label" maxlength="80"></td></tr>
                 </tbody></table></div>
-                <p class="field-help">L'e-mail reste obligatoire : il sert de clé pour la limite de parties.</p>
+                <p class="field-help">L’e-mail reste obligatoire : il sert de clé pour la limite de parties.</p>
                 <h3>Champs personnalisés</h3>
                 <div id="customFieldsList" class="list"></div>
                 <button type="button" id="addCustomField" class="secondary">＋ Ajouter un champ</button>
-                <p class="field-help">5 champs maximum. Les réponses apparaissent dans la liste des participants et l'export CSV.</p>
+                <p class="field-help">5 champs maximum. Les réponses apparaissent dans la liste des participants et l’export CSV.</p>
                 <button type="button" class="link-button reset-section" data-reset="welcome">Réinitialiser cette section</button>
               </section>
 
@@ -110,12 +110,12 @@
                 <label>Taille (px)<input name="flappy.character.size" type="range" min="32" max="120" step="1"><output data-output="flappy.character.size"></output></label>
                 <div class="field-grid"><label>Position horizontale (% de la largeur)<input name="flappy.character.startX" type="number" min="5" max="40" step="1"></label><label>Hauteur de départ (% de la hauteur)<input name="flappy.character.startY" type="number" min="20" max="70" step="1"></label></div>
                 <label class="switch-line"><input name="flappy.character.rotateOnJump" type="checkbox"><span><strong>Incliner le personnage</strong><small>Il pique du nez en tombant et se redresse au saut.</small></span></label>
-                <label>Zone de collision (% de l'image)<input name="flappy.character.hitboxScale" type="range" min="60" max="100" step="1"><output data-output="flappy.character.hitboxScale"></output></label>
-                <p class="field-help">Réduire la zone de collision rend le jeu plus tolérant autour des bords transparents de l'image.</p>
+                <label>Zone de collision (% de l’image)<input name="flappy.character.hitboxScale" type="range" min="60" max="100" step="1"><output data-output="flappy.character.hitboxScale"></output></label>
+                <p class="field-help">Réduire la zone de collision rend le jeu plus tolérant autour des bords transparents de l’image.</p>
                 <button type="button" class="link-button reset-section" data-reset="character">Réinitialiser cette section</button>
               </section>
 
-              <section class="editor-panel" data-panel="stages" hidden><span class="eyebrow">L'UNIVERS</span><h2>Décors & paliers.</h2><p class="panel-intro">Le décor change à chaque palier de score. Vitesse et gravité suivent la difficulté choisie dans Gameplay.</p>
+              <section class="editor-panel" data-panel="stages" hidden><span class="eyebrow">L’UNIVERS</span><h2>Décors & paliers.</h2><p class="panel-intro">Le décor change à chaque palier de score. Vitesse et gravité suivent la difficulté choisie dans Gameplay.</p>
                 <div id="stagesList" class="list"></div>
                 <button type="button" id="addStage" class="secondary">＋ Ajouter un palier</button>
                 <p class="field-help">Un palier sans fond reprend le fond précédent, ou le décor par défaut.</p>
@@ -126,7 +126,7 @@
                 <div class="radio-row"><label class="template-option radio-option"><input type="radio" name="flappy.obstacles.style" value="gradient"><div><strong>Dégradé de couleurs</strong><small>Deux couleurs et une bordure.</small></div></label><label class="template-option radio-option"><input type="radio" name="flappy.obstacles.style" value="image"><div><strong>Images</strong><small>Une image pour le haut, une pour le bas.</small></div></label></div>
                 <div id="obstacleColors"><div class="field-grid"><label>Couleur principale<input name="flappy.obstacles.colorA" type="color"></label><label>Couleur de reflet<input name="flappy.obstacles.colorB" type="color"></label></div><label>Bordure<input name="flappy.obstacles.border" type="color"></label></div>
                 <div class="upload-grid" id="obstacleUploads"></div>
-                <div class="field-grid"><label>Largeur (% de la largeur d'écran)<input name="flappy.obstacles.width" type="number" min="8" max="25" step="1"></label><label>Arrondi des coins (px)<input name="flappy.obstacles.radius" type="number" min="0" max="30" step="1"></label></div>
+                <div class="field-grid"><label>Largeur (% de la largeur d’écran)<input name="flappy.obstacles.width" type="number" min="8" max="25" step="1"></label><label>Arrondi des coins (px)<input name="flappy.obstacles.radius" type="number" min="0" max="30" step="1"></label></div>
                 <button type="button" class="link-button reset-section" data-reset="obstacles">Réinitialiser cette section</button>
               </section>
 
@@ -157,14 +157,14 @@
 
               <section class="editor-panel" data-panel="rules" hidden><span class="eyebrow">LES RÈGLES DU JEU</span><h2>À chaque campagne, ses règles.</h2><p class="panel-intro">Nombre de tentatives et documents légaux.</p>
                 <label>Parties par adresse email<input name="maxGames" type="number" min="1" max="10" required></label>
-                <p class="field-help">La limite est conservée après un rechargement. Elle s'applique à l'adresse email déclarée ; elle ne vérifie pas l'identité de la personne.</p>
+                <p class="field-help">La limite est conservée après un rechargement. Elle s’applique à l’adresse email déclarée ; elle ne vérifie pas l’identité de la personne.</p>
                 <h3>Documents de la société</h3><div id="legalUploads" class="upload-grid"></div>
-                <label>Texte du consentement marketing<textarea name="marketingLabel" rows="3" maxlength="200"></textarea></label><p class="field-help">Le consentement marketing reste facultatif et séparé de l'acceptation du règlement.</p>
+                <label>Texte du consentement marketing<textarea name="marketingLabel" rows="3" maxlength="200"></textarea></label><p class="field-help">Le consentement marketing reste facultatif et séparé de l’acceptation du règlement.</p>
               </section>
 
               <section class="editor-panel" data-panel="emails" hidden><span class="eyebrow">LE DERNIER MOT</span><h2>Prolongez le souvenir.</h2><p class="panel-intro">Un récapitulatif envoyé au participant après sa dernière partie.</p>
                 <label class="switch-line"><input name="emailsEnabled" type="checkbox"><span><strong>Envoyer le meilleur score par email</strong><small>Un récapitulatif par participant, à la fin de ses tentatives.</small></span></label>
-                <p id="emailSetup" class="info-box"></p><label>Objet de l'email<input name="emailSubject" maxlength="200"></label><label>Message<textarea name="emailBody" rows="10" maxlength="5000"></textarea></label>
+                <p id="emailSetup" class="info-box"></p><label>Objet de l’email<input name="emailSubject" maxlength="200"></label><label>Message<textarea name="emailBody" rows="10" maxlength="5000"></textarea></label>
                 <p class="field-help">Personnalisation disponible : <code>{{prenom}}</code>, <code>{{score}}</code>, <code>{{jeu}}</code>.</p>
                 <div class="email-preview"><span class="eyebrow">APERÇU DU MESSAGE</span><strong id="emailPreviewSubject"></strong><pre id="emailPreviewBody"></pre></div>
               </section>
@@ -180,13 +180,13 @@
             <div class="preview-label"><span>APERÇU EN DIRECT</span><span class="preview-dot"></span></div>
             <div class="preview-toolbar"><button type="button" data-goto="welcome">Accueil</button><button type="button" data-goto="countdown">Décompte</button><button type="button" data-goto="gameOver">Game over</button><button type="button" data-goto="ranking">Classement</button></div>
             <div class="phone-preview" id="phonePreview"><iframe id="previewFrame" src="/index.html?preview=1" title="Aperçu du jeu"></iframe></div>
-            <p class="preview-note">L'aperçu suit vos modifications sans les enregistrer.<br>Parties illimitées, scores non enregistrés.</p>
+            <p class="preview-note">L’aperçu suit vos modifications sans les enregistrer.<br>Parties illimitées, scores non enregistrés.</p>
           </aside>
         </div>
       </section>
     </main>
   </div>
 
-  <dialog id="newGameDialog"><form id="createGameForm"><button type="button" id="closeNewGame" class="dialog-close" aria-label="Fermer">×</button><span class="eyebrow">NOUVELLE EXPÉRIENCE</span><h2>Quel sera votre prochain jeu ?</h2><p>Choisissez un type de jeu, puis personnalisez chaque détail.</p><label>Nom du jeu<input id="newGameName" placeholder="Ex. L'envol Crousty" required maxlength="200"></label><label>Société<input id="newGameCompany" placeholder="Nom de la marque" maxlength="200"></label><div id="typeOptions"></div><button type="submit" class="primary">Créer et personnaliser →</button><p id="createStatus" role="status"></p></form></dialog>
+  <dialog id="newGameDialog"><form id="createGameForm"><button type="button" id="closeNewGame" class="dialog-close" aria-label="Fermer">×</button><span class="eyebrow">NOUVELLE EXPÉRIENCE</span><h2>Quel sera votre prochain jeu ?</h2><p>Choisissez un type de jeu, puis personnalisez chaque détail.</p><label>Nom du jeu<input id="newGameName" placeholder="Ex. L’envol Crousty" required maxlength="200"></label><label>Société<input id="newGameCompany" placeholder="Nom de la marque" maxlength="200"></label><div id="typeOptions"></div><button type="submit" class="primary">Créer et personnaliser →</button><p id="createStatus" role="status"></p></form></dialog>
 </body>
 </html>
