@@ -310,7 +310,9 @@ function pushPreview(immediate = false) {
     if (!current || $('editor').hidden || !current.flappy) return;
     let game;
     try { game = normalizeGame({ ...values(), status: 'draft' }); clearErrors(); } catch (error) { showError(error); return; }
-    for (const target of previewTargets) { if (target.closed) { previewTargets.delete(target); continue; } target.postMessage({ type: 'flappy:config', game }, location.origin); }
+    // The iframe is same-origin: push to it directly too, so a `flappy:ready` missed before this module loaded cannot leave the preview stale.
+    const targets = new Set(previewTargets); if (frame.contentWindow) targets.add(frame.contentWindow);
+    for (const target of targets) { if (target.closed) { previewTargets.delete(target); continue; } target.postMessage({ type: 'flappy:config', game }, location.origin); }
   }, immediate ? 0 : 150);
 }
 document.querySelectorAll('[data-goto]').forEach(button => button.addEventListener('click', () => frame.contentWindow?.postMessage({ type: 'flappy:goto', screen: button.dataset.goto }, location.origin)));
