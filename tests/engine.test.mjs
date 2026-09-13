@@ -20,7 +20,7 @@ function fakeWorld({ width = 400, height = 800, pinned = false, random = 0.5 } =
   };
   return { world, pipes, get birdTop() { return birdTop; }, set birdTop(v) { birdTop = v; }, get rotation() { return rotation; } };
 }
-const config = overrides => normalizeFlappy({ physics: { preset: 'custom', ...overrides?.physics }, ...overrides });
+const config = overrides => normalizeFlappy({ ...overrides, physics: { preset: 'custom', ...overrides?.physics } });
 
 test('pure helpers reproduce the original spawn cadence and stage lookup', () => {
   assert.equal(spawnInterval(100, 5), 100); assert.equal(spawnInterval(100, 15), 40); assert.equal(spawnInterval(40, 25), 20);
