@@ -38,6 +38,8 @@ export async function signOut() { auth.currentUser=null; await callback(null); }
 async function routeServices(context) {
   await context.route('https://www.gstatic.com/firebasejs/**', route => route.fulfill({ contentType: 'text/javascript', body: route.request().url().endsWith('firebase-auth.js') ? authMock : route.request().url().endsWith('firebase-app.js') ? 'export const initializeApp=()=>({});' : 'export const getDatabase=()=>({}); export const ref=()=>({}); export const get=async()=>({val:()=>({})}); export const update=async()=>{};' }));
   await context.route('https://assets.example/**', route => route.fulfill({ contentType: 'image/png', body: png }));
+  await context.route('https://fonts.googleapis.com/**', route => route.fulfill({ contentType: 'text/css', body: '' }));
+  await context.route('https://fonts.gstatic.com/**', route => route.abort());
   await context.route('**/api/**', async route => {
     const request = route.request(), url = new URL(request.url());
     if (url.pathname === '/api/assets') {
@@ -71,24 +73,46 @@ async function routeServices(context) {
     await page.locator('#newGameCompany').fill('Crousty');
     await page.locator('#createGameForm button[type=submit]').click();
     await page.locator('#editor').waitFor({ state: 'visible' });
-    await page.locator('[data-tab=brand]').click();
-    await page.locator('#birdUrl').locator('..').locator('input[type=file]').setInputFiles({ name:'bird.png', mimeType:'image/png', buffer:png });
-    await page.waitForFunction(()=>document.querySelector('#birdUrl').value.includes('assets.example'));
+    assert.match(await page.locator('.nav-item[data-type=flappy] .nav-count').textContent(), /01/);
+    await page.locator('[data-tab=character]').click();
+    await page.locator('#flappy_character_imageUrl').locator('..').locator('input[type=file]').setInputFiles({ name: 'bird.png', mimeType: 'image/png', buffer: png });
+    await page.waitForFunction(() => document.querySelector('#flappy_character_imageUrl').value.includes('assets.example'));
+    await page.locator('[data-tab=welcome]').click();
+    await page.locator('[name="flappy.screens.welcome.title"]').fill('Envol test');
+    await page.locator('#addCustomField').click();
+    await page.locator('[data-field="0"] [data-key=label]').fill('Magasin');
+    await page.locator('[data-field="0"] [data-key=type]').selectOption('select');
+    await page.locator('[data-field="0"] [data-key=options]').fill('Paris\nLyon');
+    await page.locator('[data-field="0"] [data-key=required]').check();
+    const preview = page.frameLocator('#previewFrame');
+    await preview.locator('[data-text="welcome.title"]').filter({ hasText: 'Envol test' }).waitFor();
+    assert.equal(await preview.locator('#cf_magasin option').count(), 3);
+    await page.locator('[data-tab=stages]').click();
+    await page.locator('[data-stage="1"] [data-key=minScore]').fill('0');
+    await page.locator('#saveGame').click();
+    await page.locator('.field-error').waitFor();
+    assert.equal(await page.locator('[data-tab=stages].has-error').count(), 1);
+    await page.locator('[data-stage="1"] [data-key=minScore]').fill('20');
+    await page.locator('[data-tab=gameplay]').click();
+    await page.locator('[name=countdownSeconds]').fill('1');
     await page.locator('[data-tab=rules]').click();
     await page.locator('[name=maxGames]').fill('2');
-    await page.locator('[name=countdownSeconds]').fill('1');
     await page.locator('#termsUrl').fill('https://assets.example/rules.pdf');
     await page.locator('#privacyUrl').fill('https://assets.example/privacy.pdf');
     await page.locator('[data-tab=emails]').click();
     await page.locator('[name=emailSubject]').fill('Bravo {{prenom}}, ton score chez {{jeu}}');
     assert.match(await page.locator('#emailPreviewSubject').textContent(), /Bravo Camille/);
+    await page.locator('[data-goto=ranking]').click();
+    await preview.locator('#rankingScreen').waitFor({ state: 'visible' });
+    await preview.locator('#ownRank').filter({ hasText: 'Ta place : 4 sur 27' }).waitFor();
     await page.locator('[data-tab=general]').click();
     await page.locator('[name=status]').selectOption('published');
     await page.locator('#saveGame').click();
-    await page.waitForFunction(()=>document.querySelector('#globalStatus').textContent.includes('publié'));
+    await page.waitForFunction(() => document.querySelector('#globalStatus').textContent.includes('publié'));
     const gameId = Object.keys(data.studio.games)[0];
-    assert.equal(data.studio.games[gameId].maxGames,2);
-    assert.equal(data.studio.games[gameId].birdUrl,'https://assets.example/brand.png');
+    assert.equal(data.studio.games[gameId].maxGames, 2);
+    assert.equal(data.studio.games[gameId].flappy.character.imageUrl, 'https://assets.example/brand.png');
+    assert.deepEqual(data.studio.games[gameId].flappy.form.customFields[0], { id: 'magasin', label: 'Magasin', type: 'select', required: true, options: ['Paris', 'Lyon'] });
     if (process.env.SCREENSHOT_DIR) await page.screenshot({ path:path.join(process.env.SCREENSHOT_DIR,'admin-editor.png'),fullPage:true });
 
     const playerPage = await context.newPage();
@@ -97,6 +121,7 @@ async function routeServices(context) {
     await playerPage.goto(`http://127.0.0.1:3088/?game=${gameId}`);
     await playerPage.locator('#firstName').fill('Camille'); await playerPage.locator('#lastName').fill('Test');
     await playerPage.locator('#email').fill('camille@example.invalid'); await playerPage.locator('#phone').fill('0000');
+    await playerPage.locator('#cf_magasin').selectOption('Lyon');
     await playerPage.locator('#consentGame').check();
     assert.equal(await playerPage.locator('#gameConsentText a').count(),2);
     await playerPage.locator('#loginBtn').click();
@@ -113,6 +138,7 @@ async function routeServices(context) {
     await playerPage.reload();
     await playerPage.locator('#firstName').fill('Camille'); await playerPage.locator('#lastName').fill('Test');
     await playerPage.locator('#email').fill('CAMILLE@example.invalid'); await playerPage.locator('#phone').fill('0000');
+    await playerPage.locator('#cf_magasin').selectOption('Lyon');
     await playerPage.locator('#consentGame').check(); await playerPage.locator('#loginBtn').click();
     await playerPage.locator('#rankingScreen').waitFor({state:'visible'});
     assert.equal(await playerPage.locator('#countdown').isVisible(),false);
@@ -121,10 +147,12 @@ async function routeServices(context) {
     await page.waitForFunction(()=>document.querySelectorAll('#participantsBody tr').length===1);
     const downloadPromise=page.waitForEvent('download'); await page.locator('#exportCsv').click();
     const download=await downloadPromise; const csv=fs.readFileSync(await download.path(),'utf8');
-    assert.match(csv,/camille@example.invalid/); assert.match(csv,/"8"/);
+    assert.match(csv,/camille@example.invalid/);
+    assert.match(csv, /"Magasin"/); assert.match(csv, /"Lyon"/); assert.match(csv, /"8"/);
     await page.locator('#marketingOnly').check(); assert.equal(await page.locator('#participantsBody tr').count(),0);
     await page.locator('#marketingOnly').uncheck();
     if(process.env.SCREENSHOT_DIR) await page.screenshot({path:path.join(process.env.SCREENSHOT_DIR,'admin-participants.png'),fullPage:true});
+    assert.equal(await page.locator('#participantsHead th').nth(2).textContent(), 'Magasin');
     await page.locator('#backGames').click();
     if(process.env.SCREENSHOT_DIR) await page.screenshot({path:path.join(process.env.SCREENSHOT_DIR,'admin-dashboard.png')});
     await page.setViewportSize({width:390,height:844});
@@ -133,7 +161,7 @@ async function routeServices(context) {
     await page.locator('#logout').click(); await page.locator('#login').waitFor({state:'visible'});
     assert.equal(await page.locator('#participantsBody tr').count(),0);
     assert.deepEqual(errors,[]);
-    console.log('PASS admin: login, create, upload, publish, preview, 2-part game, reload limit, participants, CSV, consent filter, mobile, logout');
+    console.log('PASS admin: login, create, upload, publish, preview iframe, custom field, stage validation, 2-part game, reload limit, participants, CSV, consent filter, mobile, logout');
     // The real local API is closed with no credentials, independently of UI mocks.
     const closed = await fetch('http://127.0.0.1:3088/api/admin');
     assert.equal(closed.status,503);

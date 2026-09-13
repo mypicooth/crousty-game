@@ -16,6 +16,9 @@ node --test tests/game-loop.test.mjs
 Ils comparent dix secondes de simulation à 30, 60, 90, 120 et 144 Hz,
 la durée du compte à rebours, la pause en arrière-plan et l’arrêt des animations.
 
+`node --test tests/flappy-config.test.mjs tests/engine.test.mjs tests/theme.test.mjs`
+valide la configuration, le moteur et le thème sans navigateur.
+
 Les opérations Firebase sont simulées pour ces scénarios. Aucun participant
 de test n’est ajouté à la base réelle. Les scores de partie sont contrôlés
 pour vérifier la sauvegarde indépendamment de l’habileté du joueur.
@@ -24,6 +27,17 @@ Avec Playwright installé et son navigateur disponible :
 
 ```sh
 node tests/browser.cjs
+```
+
+`studio-browser.cjs` démarre le serveur avec les vrais handlers API et une base de
+données en mémoire, simule l’authentification Firebase et l’upload, puis teste
+l’administration : connexion, création d’une campagne Flappy Bird, personnalisation
+du personnage et des écrans, publication et export CSV des participants d’une partie
+jouée en deux manches ; il teste aussi l’aperçu en iframe, un champ personnalisé et
+la validation des paliers.
+
+```sh
+node tests/studio-browser.cjs
 ```
 
 Variables d’environnement facultatives :

@@ -10,7 +10,12 @@ Le compte prévu est **contact@mypicbooth.com**.
 - Connexion Firebase (email/mot de passe ou Google) et vérification serveur de
   l’adresse autorisée et de sa validation.
 - Création et duplication de campagnes Flappy Bird : brouillon, publié, pause.
-- Nom, société, dates, logo, personnage, fond, texture d’obstacles, couleur.
+- Section JEUX avec un sous-menu par type de jeu (Flappy Bird aujourd’hui).
+- Personnalisation complète de chaque campagne Flappy Bird : textes de tous les écrans,
+  formulaire (champs visibles/obligatoires + jusqu’à 5 champs libres), marque et thème
+  (logo, couleurs, police), personnage, décors par palier de score, obstacles, gameplay
+  (presets ou réglages libres), classement (places, format des noms, rang, bouton).
+- Aperçu en direct : le vrai jeu en mode brouillon dans l’éditeur, jouable, sans écriture.
 - Limite de 1 à 10 parties par adresse email, compte à rebours, difficulté.
 - Import d’images et de PDF (3 Mo), règlement et politique de confidentialité.
 - Consentements séparés avec horodatage et liens des documents acceptés.
@@ -79,6 +84,14 @@ Les récapitulatifs concernent la participation ; le consentement marketing est
 stocké séparément. Les erreurs d’envoi sont conservées dans `/studio/emails`.
 Le navigateur réessaie la sauvegarde si elle échoue ; il n’y a pas encore de
 service planifié de relance des emails en échec après fermeture de la page.
+
+## Aperçu et compatibilité
+
+L’aperçu charge `/index.html?preview=1` sur l’origine de l’administration et reçoit la
+configuration par `postMessage` (même origine uniquement). Il n’écrit jamais dans Firebase.
+Les jeux créés avant cette version sont convertis à la lecture (anciennes clés `birdUrl`,
+`backgroundUrl`, `pipeUrl`, `difficulty`, `accent`, `logoUrl`, `subtitle`) et enregistrés au
+nouveau format à leur prochaine sauvegarde. Le jeu historique Crousty n’est pas concerné.
 
 ## Sous-domaine
 
