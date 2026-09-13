@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { normalizeGame, DEFAULT_GAME, publicGame, isGameOpen, participantCsv } from '../shared/game-config.mjs';
+import { normalizeGame, DEFAULT_GAME, publicGame, isGameOpen, participantCsv, migrateGame } from '../shared/game-config.mjs';
 const require = createRequire(import.meta.url);
 const platform = require('../server/platform.cjs');
 process.env.STUDIO_SESSION_SECRET = 'test-only-secret-that-is-at-least-32-characters';
@@ -58,6 +58,23 @@ test('configuration validation, publication gates and safe CSV exports', () => {
   assert.equal(publicGame(published).emailBody, undefined);
   const csv = participantCsv([{ firstName: '=HYPERLINK("evil")', email: 'a@example.com', consentMarketing: false }]);
   assert.ok(csv.includes("'=")); assert.ok(csv.includes('"Non"'));
+});
+
+test('campaign normalization delegates the flappy block to the game type and migrates flat games', () => {
+  const game = normalizeGame({ ...published, flappy: { physics: { preset: 'custom', gap: 40 }, form: { customFields: [{ label: 'Magasin', type: 'select', options: ['Paris'] }] } } });
+  assert.equal(game.type, 'flappy'); assert.equal(game.flappy.physics.gap, 40); assert.equal(game.flappy.form.customFields[0].id, 'magasin');
+  assert.equal(game.subtitle, undefined);
+  const legacy = normalizeGame({ ...published, birdUrl: 'https://a.example/bird.png', difficulty: 'easy', accent: '#112233' });
+  assert.equal(legacy.birdUrl, undefined); assert.equal(legacy.flappy.character.imageUrl, 'https://a.example/bird.png'); assert.equal(legacy.flappy.physics.preset, 'easy'); assert.equal(legacy.flappy.brand.accent, '#112233');
+  assert.throws(() => normalizeGame({ ...published, type: 'tetris' }), /Type de jeu inconnu/);
+  assert.throws(() => normalizeGame({ ...published, flappy: { leaderboard: { places: 1 } } }), e => e.path === 'flappy.leaderboard.places');
+  assert.equal(migrateGame({ name: 'x', pipeUrl: 'https://a.example/p.png' }).flappy.obstacles.topUrl, 'https://a.example/p.png');
+  const csv = participantCsv([{ firstName: 'Camille', email: 'a@example.com', extra: { magasin: 'Paris', news: true } }], game);
+  assert.match(csv.split('\r\n')[0], /"Téléphone";"Magasin";"Parties"/);
+  assert.match(csv.split('\r\n')[1], /"Paris"/);
+  const withCheckbox = normalizeGame({ ...published, flappy: { form: { customFields: [{ label: 'News', type: 'checkbox' }] } } });
+  assert.match(participantCsv([{ extra: { news: true } }], withCheckbox), /"Oui"/);
+  assert.match(participantCsv([{ extra: {} }], withCheckbox), /"Non"/);
 });
 
 test('studio is closed until server activation', () => {

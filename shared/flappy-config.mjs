@@ -124,8 +124,10 @@ export function normalizeFlappy(input = {}) {
 }
 
 export function migrateLegacyGame(game) {
-  if (!game || game.flappy) return game;
+  if (!game) return game;
   const { birdUrl, backgroundUrl, pipeUrl, difficulty, accent, logoUrl, subtitle, ...rest } = game;
+  const hasLegacyFields = birdUrl || backgroundUrl || pipeUrl || difficulty || accent || logoUrl || subtitle;
+  if (!hasLegacyFields) return game;
   const brandAccent = color(accent, FLAPPY_DEFAULTS.brand.accent);
   return { ...rest, flappy: {
     brand: { logoUrl: logoUrl || '', accent: brandAccent },
