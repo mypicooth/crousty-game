@@ -6,3 +6,7 @@ dist/
 .vercel/
 service-account*.json
 *.log
+
+# Claude Code local state and worktrees
+.claude/
+.superpowers/
