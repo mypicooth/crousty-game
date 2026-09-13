@@ -130,6 +130,61 @@ test('two attempts survive re-registration; starts and finishes are idempotent',
   assert.equal((await call(game, { token, method: 'POST', query: { id: 'other', action: 'start' }, body: { requestId: 'cross_game' } })).status, 401);
 });
 
+test('registration follows the game form: hidden, optional, custom and unknown fields', async () => {
+  db = memoryDatabase();
+  const config = { ...published, flappy: { form: { fields: { phone: { visible: false }, lastName: { required: false } }, customFields: [{ label: 'Magasin', type: 'select', options: ['Paris', 'Lyon'], required: true }, { label: 'News', type: 'checkbox' }] } } };
+  await db.ref('studio/games/formgame').set(config);
+  const base = { firstName: 'Camille', email: 'form@example.com', consentGame: true };
+  const missing = await call(game, { method: 'POST', query: { id: 'formgame', action: 'register' }, body: base });
+  assert.equal(missing.status, 400); assert.match(missing.error, /Magasin/);
+  const bad = await call(game, { method: 'POST', query: { id: 'formgame', action: 'register' }, body: { ...base, extra: { magasin: 'Nice' } } });
+  assert.equal(bad.status, 400);
+  const unknown = await call(game, { method: 'POST', query: { id: 'formgame', action: 'register' }, body: { ...base, extra: { magasin: 'Paris', hack: 1 } } });
+  assert.equal(unknown.status, 400);
+  const ok = await call(game, { method: 'POST', query: { id: 'formgame', action: 'register' }, body: { ...base, phone: 'ignored', extra: { magasin: 'Paris' } } });
+  assert.equal(ok.status, 200);
+  const stored = Object.values(db.data.studio.participants.formgame)[0];
+  assert.deepEqual(stored.extra, { magasin: 'Paris', news: false }); assert.equal(stored.phone, ''); assert.equal(stored.lastName, '');
+  const listed = await call(admin, { token: 'admin', query: { action: 'participants', id: 'formgame' } });
+  assert.deepEqual(listed.participants[0].extra, { magasin: 'Paris', news: false });
+  const publicConfig = await call(game, { query: { id: 'formgame', action: 'config' } });
+  assert.equal(publicConfig.game.flappy.form.customFields[0].id, 'magasin'); assert.equal(publicConfig.game.emailBody, undefined);
+});
+
+test('leaderboard honours places, name format and own rank; legacy entries keep their display name', async () => {
+  db = memoryDatabase();
+  await db.ref('studio/games/board').set({ ...published, maxGames: 5, flappy: { leaderboard: { places: 3, nameFormat: 'full', showOwnRank: true } } });
+  await db.ref('studio/leaderboards/board/old').set({ displayName: 'Ancien J.', highScore: 50 });
+  const register = async email => (await call(game, { method: 'POST', query: { id: 'board', action: 'register' }, body: { firstName: 'Camille', lastName: 'Test', email, phone: '0', consentGame: true } })).token;
+  const tokens = [];
+  for (const [index, score] of [30, 20, 10, 5].entries()) {
+    const token = await register(`p${index}@example.com`); tokens.push(token);
+    const { runId } = await call(game, { token, method: 'POST', query: { id: 'board', action: 'start' }, body: { requestId: 'r' + index } });
+    await call(game, { token, method: 'POST', query: { id: 'board', action: 'finish' }, body: { runId, score } });
+  }
+  const anonymous = await call(game, { query: { id: 'board', action: 'leaderboard' } });
+  assert.deepEqual(anonymous.players, [{ displayName: 'Ancien J.', highScore: 50 }, { displayName: 'Camille Test', highScore: 30 }, { displayName: 'Camille Test', highScore: 20 }]);
+  assert.equal(anonymous.me, undefined);
+  const mine = await call(game, { token: tokens[3], query: { id: 'board', action: 'leaderboard' } });
+  assert.deepEqual(mine.me, { rank: 5, total: 5 });
+  await db.ref('studio/games/board/flappy/leaderboard/nameFormat').set('first');
+  assert.equal((await call(game, { query: { id: 'board', action: 'leaderboard' } })).players[1].displayName, 'Camille');
+  await db.ref('studio/games/board/flappy/leaderboard/showOwnRank').set(false);
+  assert.equal((await call(game, { token: tokens[0], query: { id: 'board', action: 'leaderboard' } })).me, undefined);
+});
+
+test('admin reads migrate flat games and saves drop the legacy keys', async () => {
+  db = memoryDatabase();
+  const { flappy: _defaults, ...flat } = published;
+  await db.ref('studio/games/old').set({ ...flat, birdUrl: 'https://a.example/bird.png', difficulty: 'hard', createdAt: 5 });
+  const list = await call(admin, { token: 'admin', query: { action: 'games' } });
+  assert.equal(list.games[0].birdUrl, undefined); assert.equal(list.games[0].flappy.character.imageUrl, 'https://a.example/bird.png'); assert.equal(list.games[0].createdAt, 5);
+  const saved = await call(admin, { token: 'admin', method: 'POST', query: { action: 'save', id: 'old' }, body: list.games[0] });
+  assert.equal(saved.status, 200); assert.equal(db.data.studio.games.old.birdUrl, undefined); assert.equal(db.data.studio.games.old.flappy.physics.preset, 'hard');
+  const invalid = await call(admin, { token: 'admin', method: 'POST', query: { action: 'save' }, body: { ...published, flappy: { stages: [{ minScore: 3 }] } } });
+  assert.equal(invalid.status, 400); assert.equal(invalid.path, 'flappy.stages.0.minScore');
+});
+
 test('invalid uploads and tampered session tokens are rejected', async () => {
   db = memoryDatabase();
   assert.equal((await call(assets, { token: 'admin', method: 'POST', body: { type: 'image/png', data: Buffer.from('<script>bad</script>').toString('base64') } })).status, 400);

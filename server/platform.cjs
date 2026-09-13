@@ -44,7 +44,7 @@ function requireSession(req, gameId) {
 function send(res, status, body) { res.setHeader('Cache-Control', 'no-store'); res.status(status).json(body); }
 function failure(res, error) {
   if (!error.status) console.error('Studio API error:', error.code || error.name);
-  send(res, error.status || 500, { error: error.status ? error.message : 'Le service est momentanément indisponible. Réessaie dans un instant.' });
+  send(res, error.status || 500, { error: error.status ? error.message : 'Le service est momentanément indisponible. Réessaie dans un instant.', ...(error.path ? { path: error.path } : {}) });
 }
 function body(req) {
   const value = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
